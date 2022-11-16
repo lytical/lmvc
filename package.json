@@ -1,0 +1,31 @@
+{
+  "author": {
+    "name": "barry hayles; lytical, inc.",
+    "email": "barry.hayles@lytical.com",
+    "url": "https://www.lytical.com"
+  },
+  "description": "lytical model-view-controller library for single page web application.",
+  "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "@types/mocha": "8.0.0",
+    "@types/esprima": "^4.0.2",
+    "@types/jquery": "^3.3.29",
+    "@types/requirejs": "^2.1.32",
+    "gulp": "4.0.2",
+    "typescript": "^4.7.3"
+  },
+  "name": "@lytical/lmvc",
+  "peerDependencies": {
+    "esprima": "^4.0.1",
+    "jquery": "^3.4.1",
+    "requirejs": "2.3.6",
+    "requirejs-text": "2.0.15",
+    "rxjs": "^7.5.1"
+  },
+  "private": true,
+  "scripts": {
+    "build": "tsc --build&&gulp post_build",
+    "clean": "tsc --build --clean"
+  },
+  "version": "0.0.0"
+}

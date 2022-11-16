@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "outFile": "../.obj/lmvc/main.js",
+    "paths": {
+      "rxjs": [
+        "./common/node_modules/rxjs"
+      ],
+      "rxjs/*": [
+        "./common/node_modules/rxjs/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "extends": "../common/cli.tsconfig.json",
+  "include": [
+    "../common/**/*.ts",
+    "**/*.ts"
+, "test/bootstrap.ts"  ]
+}

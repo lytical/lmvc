@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Mocha Tests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/node_modules/mocha/mocha.css" />
+</head>
+
+<body>
+  <div id="mocha"></div>
+  <div *l:test:controller></div>
+  <script data-main="../main" src="/node_modules/requirejs/require.js"></script>
+  <script>
+    require.config({
+      baseUrl: "..",
+      deps: [
+        'chai'
+      ],
+      paths: {
+        'chai': '/node_modules/chai/chai',
+        'l': 'lmvc',
+        'mocha': '/node_modules/mocha/mocha'
+      },
+      shim: {
+        chai: {
+          deps: ['mocha']
+        },
+        mocha: {}
+      }
+    });
+  </script>
+  <script>
+    require(['mocha'], mocha => {
+      mocha.setup('bdd');
+      mocha.checkLeaks();
+      require(['lmvc/test/main']);
+    });
+  </script>
+</body>
