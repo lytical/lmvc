@@ -4,6 +4,3 @@
   please refer to your license agreement on the use of this file.
 */
 
-export interface lmvc_model {
-  
-}
