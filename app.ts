@@ -6,12 +6,11 @@
 
 import { $view } from './view';
 import { $controller } from './controller';
+import { $model } from './model';
 import type { __cstor } from 'common/plain-object';
 import type { lmvc_controller, lmvc_scope, lmvc_view } from './type';
 
 const view_attr_pattern = /\*?\w[\w\-]*(:\w[\w\-]*){1,}/;
-
-export type lmvc_hook = (scope: lmvc_scope) => void | Promise<any>;
 
 export class lmvc_app {
   constructor() {
@@ -22,13 +21,13 @@ export class lmvc_app {
     }
   }
 
-  bootstrap<_t_ = unknown>(controller: lmvc_controller<_t_> = {}): void | Promise<any> {
+  bootstrap(controller: lmvc_controller = { $model: {} }): void | Promise<any> {
     console.assert(!this.root_scope && document.body.parentElement !== null);
     if(document.body.parentElement !== null) {
       this.root_scope = {
         app: this,
         controller,
-        descendant: [],
+        model: {},
         node: document.body.parentElement,
         view: [controller]
       };
@@ -49,35 +48,6 @@ export class lmvc_app {
     return rt;
   }
 
-  static init_controller(scope: lmvc_scope) {
-    if(scope.controller) {
-      // let it = document.createNodeIterator(scope.node, NodeFilter.SHOW_ELEMENT, {
-      //   acceptNode(node) {
-      //     if(node instanceof Element) {
-      //       const attr = node.attributes;
-      //       if(attr !== undefined && attr.length) {
-      //         for(let i = 0, max = attr.length; i < max; ++i) {
-      //           const item = attr.item(i);
-      //           if(item) {
-      //             const match = view_attr_pattern.exec(item.name);
-      //             if(match !== null && match.index === 0) {
-      //               if(node[view_attr] !== undefined) {
-      //                 node[view_attr]!.push(match);
-      //               }
-      //               else {
-      //                 node[view_attr] = [match];
-      //               }
-      //             }
-      //           }
-      //         }
-      //       }
-      //     }
-      //     return (<Element>node)[view_attr] === undefined ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT;
-      //   }
-      // });
-    }
-  }
-
   static init_views(scope: lmvc_scope) {
     if(scope.controller) {
     }
@@ -93,7 +63,13 @@ export class lmvc_app {
         .join(seperator));
   }
 
-  protected async load_scope(scope: lmvc_scope) {
+  protected async load_scope(scope: lmvc_scope, views?: lmvc_view[]) {
+    console.debug({scope, views});
+    let is_root: true | undefined;
+    if(!views) {
+      is_root = true;
+      views = [];
+    }
     if(scope.node instanceof Element) {
       const attr = scope.node.attributes;
       if(attr) {
@@ -105,15 +81,7 @@ export class lmvc_app {
             if(match && match.index === 0) {
               let name = item.name;
               remove.push(name);
-              let is_controller = name.startsWith('*');
-              if(is_controller) {
-                console.assert(!scope.controller, 'multiple controllers detected');
-                scope.controller = <lmvc_controller>await this.create_view_instance(name.slice(1));
-                scope.view.push(scope.controller);
-              }
-              else {
-                scope.view.push(await this.create_view_instance(name));
-              }
+              scope.view.push(await this.create_view_instance(name.startsWith('*') ? name.slice(1) : name));
             }
           }
         }
@@ -148,18 +116,57 @@ export class lmvc_app {
         scope.node.parentNode?.replaceChild(node, scope.node);
         scope.node = node;        
       }
+      scope.controller.$model = $model.make_model(scope.controller.$model || {});
+      let it = document.createNodeIterator(scope.node, NodeFilter.SHOW_ELEMENT, lmvc_app.node_iterator);
+      let wait: Promise<lmvc_scope>[] = [];
+      for(let next = <Element>it.nextNode(); next; next = <Element>it.nextNode()) {
+        wait.push(this.load_scope({
+          app: this,
+          model: scope.controller.$model,
+          node: next,
+          parent: scope,
+          view: [],
+          controller: scope.controller
+        }, views));
+      }
+      scope.descendant = await Promise.all(wait);
     }
-    let wait = <Promise<any>[]>scope.view
-      .map(x => typeof x.$init === 'function' ? x.$init() : undefined)
-      .filter(x => typeof x === 'object' && typeof x.then === 'function');
-    await Promise.all(wait);
-    
+    else {
+      scope.descendant = [];
+    }
+    if(is_root) {
+      let wait = <Promise<any>[]>views.concat(scope.view)
+        .map(x => typeof x.$init === 'function' ? x.$init() : undefined)
+        .filter(x => typeof x === 'object' && typeof x.then === 'function');
+      await Promise.all(wait);
+    }
+    return scope;
   }
 
   private on_mutation(recs: MutationRecord[]) {
     console.debug({ on_mutation: recs });
   }
 
+  private static node_iterator = {
+    acceptNode(node: Node) {
+      if(node instanceof Element) {
+        const attr = node.attributes;
+        if(attr !== undefined && attr.length) {
+          for(let i = 0, max = attr.length; i < max; ++i) {
+            const item = attr.item(i);
+            if(item) {
+              const match = view_attr_pattern.exec(item.name);
+              if(match !== null && match.index === 0) {
+                return NodeFilter.FILTER_ACCEPT;
+              }
+            }
+          }
+        }
+      }
+      return NodeFilter.FILTER_SKIP;
+    }
+  }
+  
   private observer?: MutationObserver;
   root_scope?: lmvc_scope;
   private readonly view: Record<string, __cstor> = {};
