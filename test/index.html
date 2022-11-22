@@ -11,33 +11,5 @@
 <body>
   <div id="mocha"></div>
   <div *l:test:controller></div>
-  <script data-main="../main" src="/node_modules/requirejs/require.js"></script>
-  <script>
-    require.config({
-      baseUrl: "..",
-      deps: [
-        'chai'
-      ],
-      paths: {
-        chai: '/node_modules/chai/chai',
-        esprima: '/node_modules/esprima/dist/esprima',
-        l: '.',
-        mocha: '/node_modules/mocha/mocha',
-        rxjs: '/node_modules/rxjs/dist/bundles/rxjs.umd.min'
-      },
-      shim: {
-        chai: {
-          deps: ['mocha']
-        },
-        mocha: {}
-      }
-    });
-  </script>
-  <script>
-    require(['mocha'], mocha => {
-      mocha.setup('bdd');
-      mocha.checkLeaks();
-      require(['lmvc/test/main']);
-    });
-  </script>
+  <script data-main="/lmvc/main" src="/node_modules/requirejs/require.js"></script>
 </body>

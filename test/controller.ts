@@ -11,7 +11,7 @@ interface model extends lmvc_model {
   text?: string;
 }
 
-@controller({ html: 'test/controller.html' })
+@controller({ html: 'lmvc/test/controller.html' })
 export class lmvc_test_controller implements lmvc_controller<model> {
   $model!: model; 
 }
