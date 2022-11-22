@@ -16,5 +16,6 @@ describe('an app instance', () => {
     expect(x).is.not.undefined;
     x.bootstrap();
     expect(true).to.be.true;
+    expect(window.document.querySelector('#lmvc-test-controller')).is.not.null;
   });
 });
