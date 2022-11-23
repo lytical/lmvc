@@ -14,7 +14,6 @@ export interface lmvc_scope<_t_ = unknown> {
   args?: string | string[];
   controller: lmvc_controller;
   descendant?: lmvc_scope[];
-  model: lmvc_model & _t_;
   node: Node;
   parent?: lmvc_scope;
   view: lmvc_view[];

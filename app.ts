@@ -22,13 +22,12 @@ export class lmvc_app {
   }
 
   bootstrap(controller: lmvc_controller = { $model: {} }): void | Promise<any> {
-    console.assert(!this.root_scope && document.body.parentElement !== null);
-    if(document.body.parentElement !== null) {
+    console.assert(!this.root_scope && document.body.parentNode !== null);
+    if(document.body.parentNode !== null) {
       this.root_scope = {
         app: this,
         controller,
-        model: {},
-        node: document.body.parentElement,
+        node: document.body.parentNode,
         view: [controller]
       };
       return this.load_scope(this.root_scope);
@@ -81,7 +80,13 @@ export class lmvc_app {
             if(match && match.index === 0) {
               let name = item.name;
               remove.push(name);
-              scope.view.push(await this.create_view_instance(name.startsWith('*') ? name.slice(1) : name));
+              if(name.startsWith('*')) {
+                const ctlr = <lmvc_controller>await this.create_view_instance(name.slice(1));
+                scope.view.push(ctlr);
+              }
+              else {
+                scope.view.push(await this.create_view_instance(name));
+              }
             }
           }
         }
@@ -122,7 +127,6 @@ export class lmvc_app {
       for(let next = <Element>it.nextNode(); next; next = <Element>it.nextNode()) {
         wait.push(this.load_scope({
           app: this,
-          model: scope.controller.$model,
           node: next,
           parent: scope,
           view: [],
