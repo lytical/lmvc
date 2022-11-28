@@ -16,6 +16,7 @@ export interface lmvc_scope<_t_ = unknown> {
   descendant?: lmvc_scope[];
   node: Node;
   parent?: lmvc_scope;
+  template: Node;
   view: lmvc_view[];
 }
 
@@ -64,6 +65,7 @@ export interface lmvc_view<_t_ = unknown> {
 
 export interface lmvc_controller<_t_ = unknown> extends lmvc_view<_t_> {
   $model: lmvc_model;
+  $view: lmvc_view[];
 }
 
 /**

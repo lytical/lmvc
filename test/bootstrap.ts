@@ -14,7 +14,7 @@ describe('an app instance', () => {
   it('can bootstrap the application', async () => {
     var x = new lmvc_app();
     expect(x, 'failed to allocate app.').is.not.undefined;
-    x.bootstrap();
+    await x.bootstrap();
     expect(window.document.querySelector('#lmvc-test-controller'), 'the test controller did not replace the dom element.').is.not.null;
   });
 });

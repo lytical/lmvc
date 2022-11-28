@@ -13,5 +13,6 @@ interface model extends lmvc_model {
 
 @controller({ html: 'lmvc/test/controller.html' })
 export class lmvc_test_controller implements lmvc_controller<model> {
-  $model!: model; 
+  $model!: model;
+  $view = [];
 }

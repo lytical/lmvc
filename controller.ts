@@ -12,23 +12,14 @@ export class $controller {
     const md = <mvc_controller_metedata_arg | undefined>$view.get_view_metadata(arg);
     let rs = typeof md?.html === 'function' ? md.html(arg) : md?.html;
     while(rs) {
-      if(rs instanceof Node) {
-        return rs.cloneNode(true);
+      if(Array.isArray(rs)) {
+        return rs.map(x => x.cloneNode(true));
       }
       if(typeof rs === 'object' && typeof rs.then === 'function') {
-        const node = await rs;
-        if(Array.isArray(node)) {
-          console.assert(node.length === 1, 'warning: controller html contains multiple root elements. only the first element will be used.');
-          rs = node[0];
-        }
-        else {
-          rs = node;
-        }
+        rs = await rs;
       }
       if(typeof rs === 'string') {
-        const node = await $controller.load_html(rs);
-        console.assert(node.length === 1, 'warning: controller html contains multiple root elements. only the first element will be used.');
-        rs = node[0];
+        rs = await $controller.load_html(rs);
       }
     }
     return undefined;
@@ -87,7 +78,7 @@ export interface mvc_view_metadata_arg {
 }
 
 export interface mvc_controller_metedata_arg extends mvc_view_metadata_arg {
-  html: string | null | Node | Promise<Node[]> | ((ctx: lmvc_controller) => Node | string | null | Promise<Node | string | null>);
+  html: string | null | Node[] | Promise<Node[]> | ((ctx: lmvc_controller) => Node[] | string | null | Promise<Node[] | string | null>);
   rest?: (string | { id: string, is_optional?: true })[];
 }
 
