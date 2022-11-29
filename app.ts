@@ -28,7 +28,7 @@ export class lmvc_app implements lmvc_controller {
       this.$scope = await this.load_scope(document.body.parentNode, this, views);
       this.$scope.descendant = await this.load_descendants(this.$scope.node, this, views);
       await lmvc_app.init_views(views);
-      $view.invoke_method('$mount', lmvc_app.get_scope_self_and_descendant_views(this.$scope));
+      $view.invoke_method('$mount', lmvc_app.get_scope_self_and_descendant_views(this.$scope), x => x.$is_ready === true);
     }
   }
 
@@ -74,10 +74,12 @@ export class lmvc_app implements lmvc_controller {
   }
 
   static get_scope_self_and_descendant_views(scope: lmvc_scope) {
-    return lmvc_app.get_scope_self_and_descendant(scope).map(x => x.view).reduce((rs, x) => {
-      rs.push(...x);
-      return rs;
-    }, []);
+    return lmvc_app
+      .get_scope_self_and_descendant(scope)
+      .map(x => x.view).reduce((rs, x) => {
+        rs.push(...x);
+        return rs;
+      }, []);
   }
 
   private static async init_views(views: lmvc_view[]) {
