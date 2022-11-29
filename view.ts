@@ -5,6 +5,7 @@
 */
 
 import type { __cstor } from 'common/plain-object';
+import type { lmvc_view } from './type';
 
 const mvc_view_metadata: unique symbol = Symbol('l-mvc-view-metadata');
 
@@ -19,11 +20,18 @@ export class $view {
     return undefined;
   }
 
+  static invoke_method(method: string, views: lmvc_view[], filter = (_: lmvc_view) => true): Promise<any> {
+    return Promise.all(views
+      .filter((x: any) => typeof x[method] === 'function' && filter(x))
+      .map((x: any) => <Promise<void> | void>x[method]())
+      .filter(x => x && typeof x === 'object' && typeof x.then === 'function'));
+  }
+
   static is_view(value: any) {
     return $view.get_view_metadata(value) !== undefined;
   }
 
-  static async load_view(id: string): Promise<__cstor> {
+  static async load_view(id: string): Promise<__cstor<lmvc_view>> {
     let mod = await import(id.replace(/:/g, '/'));
     for(const key of Object.getOwnPropertyNames(mod)) {
       if(key !== '__esModule') {

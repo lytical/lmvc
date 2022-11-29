@@ -4,9 +4,15 @@
   please refer to your license agreement on the use of this file.
 */
 
+import type { __cstor } from 'common/plain-object';
 import type { Subscribable } from 'rxjs';
 
 export interface lmvc_app {
+  create_view_instance(id: string): Promise<lmvc_view>;
+  find_scope(node: Node): lmvc_scope | undefined;
+  load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope[]>;
+  load_scope(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope>;
+  register_view(id: string, cstor: __cstor<lmvc_view>): void;
 }
 
 export interface lmvc_scope<_t_ = unknown> {
@@ -55,6 +61,11 @@ export interface lmvc_view<_t_ = unknown> {
    * the context dom node (ctx.scope.node) can be accessed by all views.
    */
   $ready?(): void | Promise<any>;
+
+  /**
+   * indicates that the view has been initialized and is ready.
+   */
+  $is_ready?: true;
 
   /**
    * the associated scope.
