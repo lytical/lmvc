@@ -19,8 +19,10 @@ describe('an app instance', () => {
     expect(y, 'the test controller did not replace the dom element.').is.not.null;
     expect(y?.textContent, 'l:text view did not render $model.text value').equals('foobar this stuff');
     let z = x.find_scope(y!);
-    expect(z, 'scope not found from the dom element.').is.not.null;
-    await x.destroy_scope(z);
+    expect(z, 'scope not found from the dom element.').is.not.null.and.is.not.empty;
+    for(let s of z) {
+      await x.destroy_scope(s);
+    }
     y = window.document.querySelector('#lmvc-test-controller');
     expect(y, 'dom element not removed after scope destroyed.').is.null;
     let c = <any>z?.view[0];
