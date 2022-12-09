@@ -28,7 +28,7 @@ export class lmvc_app implements lmvc_controller {
       this.$scope = await this.load_scope(document.body.parentNode, this, views);
       this.$scope.descendant = await this.load_descendants(this.$scope.node, this, views);
       await lmvc_app.init_views(views);
-      $view.invoke_method('$mount', lmvc_app.get_scope_self_and_descendant_views(this.$scope), x => x.$is_ready === true);
+      $view.invoke_method('$mount', lmvc_app.get_scope_views_self_and_descendant(this.$scope), x => x.$is_ready === true);
     }
   }
 
@@ -73,7 +73,7 @@ export class lmvc_app implements lmvc_controller {
     return rt;
   }
 
-  static get_scope_self_and_descendant_views(scope: lmvc_scope) {
+  static get_scope_views_self_and_descendant(scope: lmvc_scope) {
     return lmvc_app
       .get_scope_self_and_descendant(scope)
       .map(x => x.view).reduce((rs, x) => {
@@ -221,9 +221,9 @@ export class lmvc_app implements lmvc_controller {
     return scope;
   }
 
-  private invoke_scoped_views(node: Node, method: string): PromiseLike<any> {
+  private invoke_scoped_views(node: Node, method: string, filter = (_: lmvc_view) => true): PromiseLike<any> {
     const scope = this.find_scope(node);
-    return scope ? $view.invoke_method(method, scope.view) : Promise.resolve();
+    return scope ? $view.invoke_method(method, scope.view, filter) : Promise.resolve();
   }
 
   private on_mutation(recs: MutationRecord[]) {
