@@ -8,8 +8,8 @@ import { view } from './view';
 import { lmvc_eval } from './eval';
 
 @view()
-export class mvc_text extends lmvc_eval {
-  protected update(value: any, _msg: unknown, _arg?: string) {
+export class lmvc_text extends lmvc_eval {
+  protected update(value: any) {
     (<Element>this.$scope!.node).textContent = value?.toString();
   }
 }
