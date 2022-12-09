@@ -58,8 +58,6 @@ export class lmvc_app implements lmvc_controller {
               task.push(rs);
             }
           }
-          ls[0].parent = undefined;
-          ls[0].descendant = undefined;
         }
       }
       await Promise.all(task);
