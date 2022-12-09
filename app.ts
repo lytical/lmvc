@@ -65,18 +65,20 @@ export class lmvc_app implements lmvc_controller {
   }
 
   find_scope(node: Node) {
+    // todo: this should find all scopes for a node since a node can have one or two.
     const stack: lmvc_scope[] = [];
+    const rt: lmvc_scope[] = [];
     let scope = this.$scope;
     while(scope) {
       if(scope.node === node) {
-        return scope;
+        rt.push(scope);
       }
       if(scope.descendant) {
         stack.push(...scope.descendant);
       }
       scope = stack.shift();
     }
-    return undefined;
+    return rt;
   }
 
   static get_scope_self_and_descendant(scope?: lmvc_scope) {
