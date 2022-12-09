@@ -28,7 +28,7 @@ export class lmvc_app implements lmvc_controller {
       this.$scope = await this.load_scope(document.body.parentNode, this, views);
       this.$scope.descendant = await this.load_descendants(this.$scope.node, this, views);
       await lmvc_app.init_views(views);
-      $view.invoke_method('$mount', lmvc_app.get_scope_views_self_and_descendant(this.$scope), x => x.$is_ready === true);
+      await $view.invoke_method('$mount', lmvc_app.get_scope_views_self_and_descendant(this.$scope), x => x.$is_ready === true);
     }
   }
 
@@ -43,6 +43,27 @@ export class lmvc_app implements lmvc_controller {
       await rt.$create();
     }
     return rt;
+  }
+
+  async destroy_scope(scope?: lmvc_scope<unknown>) {
+    const ls = lmvc_app.get_scope_self_and_descendant(scope);
+    if(ls.length) {
+      ls[0].node.parentNode?.removeChild(ls[0].node);
+      const task: Promise<void>[] = [];
+      for(let i = ls.length - 1; i !== -1; --i) {
+        for(let v of ls[i].view) {
+          if(typeof v.$dispose === 'function') {
+            let rs = v.$dispose();
+            if(typeof rs === 'object' && typeof rs?.then === 'function') {
+              task.push(rs);
+            }
+          }
+          ls[0].parent = undefined;
+          ls[0].descendant = undefined;
+        }
+      }
+      await Promise.all(task);
+    }
   }
 
   find_scope(node: Node) {
@@ -146,12 +167,16 @@ export class lmvc_app implements lmvc_controller {
                 views.push(ctlr);
                 ctlr.$scope = scope;
                 ctlr.$model = $model.make_model(ctlr.$model || {});
+                ctlr.$arg = match.input.slice(match[0].length + 1);
+                ctlr.$value = item.value;
               }
               else {
                 let view = await this.create_view_instance(name);
                 scope.view.push(view);
                 views.push(view);
                 view.$scope = scope;
+                view.$arg = match.input.slice(match[0].length + 1);
+                view.$value = item.value;
               }
             }
           }

@@ -49,6 +49,12 @@ export interface lmvc_view<_t_ = unknown> {
    * this method may be called more than once for a view instance.
    */
   $mount?(): void | Promise<any>;
+  
+  /**
+   * an optional method that's invoked after all view instances are initialized.
+   * the context dom node (ctx.scope.node) can be accessed by all views.
+   */
+  $ready?(): void | Promise<any>;
 
   /**
    * an optional method that's invoked when the view instance is removed from the dom.
@@ -57,10 +63,9 @@ export interface lmvc_view<_t_ = unknown> {
   $unmount?(): void | Promise<any>;
 
   /**
-   * an optional method that's invoked after all view instances are initialized.
-   * the context dom node (ctx.scope.node) can be accessed by all views.
+   * the values provided in the dom attribute name.
    */
-  $ready?(): void | Promise<any>;
+  $arg?: unknown;
 
   /**
    * indicates that the view has been initialized and is ready.
@@ -72,6 +77,11 @@ export interface lmvc_view<_t_ = unknown> {
    * this member is available for the entire life, after $create
    */
   $scope?: lmvc_scope;
+
+  /**
+   * the dom attribute value.
+   */
+  $value?: unknown;
 }
 
 export interface lmvc_controller<_t_ = unknown> extends lmvc_view<_t_> {

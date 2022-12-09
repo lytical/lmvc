@@ -13,14 +13,37 @@ interface model extends lmvc_model {
 
 @controller({ html: 'lmvc/test/controller.html' })
 export class lmvc_test_controller implements lmvc_controller<model> {
-  $mount(): void | Promise<any> {
-    console.debug('mount');
+  async $create() {
+    this.created = true;
   }
 
-  $unmount(): void | Promise<any> {
-    console.debug('unmount');
+  async $dispose() {
+    this.disposed = true;
+  }
+
+  async $init() {
+    this.inited = true;
+  }
+
+  async $mount() {
+    this.mounted = true;
+  }
+
+  async $ready() {
+    this.readyed = true;
+    this.$model.text = 'foobar this stuff';
+  }
+
+  async $unmount() {
+    this.unmounted = true;
   }
 
   $model!: model;
   $view = [];
+  created?: true;
+  disposed?: true;
+  inited?: true;
+  mounted?: true;
+  readyed?: true;
+  unmounted?: true;
 }

@@ -12,9 +12,24 @@ before(() => {
 
 describe('an app instance', () => {
   it('can bootstrap the application', async () => {
-    var x = new lmvc_app();
+    let x = new lmvc_app();
     expect(x, 'failed to allocate app.').is.not.undefined;
     await x.bootstrap();
-    expect(window.document.querySelector('#lmvc-test-controller'), 'the test controller did not replace the dom element.').is.not.null;
+    let y = window.document.querySelector('#lmvc-test-controller');
+    expect(y, 'the test controller did not replace the dom element.').is.not.null;
+    expect(y?.textContent, 'l:text view did not render $model.text value').equals('foobar this stuff');
+    let z = x.find_scope(y!);
+    expect(z, 'scope not found from the dom element.').is.not.null;
+    await x.destroy_scope(z);
+    y = window.document.querySelector('#lmvc-test-controller');
+    expect(y, 'dom element not removed after scope destroyed.').is.null;
+    let c = <any>z?.view[0];
+    expect(c).not.empty;
+    expect(c.created, 'view method $created() not invoked.').is.true;
+    expect(c.disposed, 'view method $dispose() not invoked.').is.true;
+    expect(c.inited, 'view method $init() not invoked.').is.true;
+    expect(c.mounted, 'view method $mount() not invoked.').is.true;
+    expect(c.readyed, 'view method $ready() not invoked.').is.true;
+    expect(c.unmounted, 'view method $unmount() not invoked.').is.true;
   });
 });
