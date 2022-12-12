@@ -17,5 +17,5 @@
   "include": [
     "../common/**/*.ts",
     "**/*.ts"
-, "test/bootstrap.ts"  ]
+  ]
 }

@@ -7,12 +7,26 @@ please refer to your license agreement on the use of this file.
 import { expect } from 'chai';
 import { lmvc_app } from 'lmvc/app';
 
+declare global {
+  interface Window {
+    test_app?: lmvc_app;
+  }
+}
+
+after(() => {
+  window.test_app = undefined;
+});
+
 before(() => {
+  if(!window.test_app) {
+    window.test_app = new lmvc_app();
+    expect(window.test_app, 'failed to allocate app.').is.not.undefined;
+  }
 });
 
 describe('an app instance', () => {
   it('can bootstrap the application', async () => {
-    let x = new lmvc_app();
+    let x = window.test_app!;
     expect(x, 'failed to allocate app.').is.not.undefined;
     await x.bootstrap();
     let y = window.document.querySelector('#lmvc-test-controller');
@@ -25,8 +39,15 @@ describe('an app instance', () => {
     }
     y = window.document.querySelector('#lmvc-test-controller');
     expect(y, 'dom element not removed after scope destroyed.').is.null;
-    let c = <any>z[0].view[0];
-    expect(c).not.empty;
+    let c = <{
+      created: boolean,
+      disposed: boolean,
+      inited: boolean,
+      mounted: boolean,
+      readyed: boolean,
+      unmounted: boolean
+    }>z[0].view[0];
+    expect(c, 'controller is missing.').not.empty;
     expect(c.created, 'view method $created() not invoked.').is.true;
     expect(c.disposed, 'view method $dispose() not invoked.').is.true;
     expect(c.inited, 'view method $init() not invoked.').is.true;
