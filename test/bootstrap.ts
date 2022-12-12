@@ -25,7 +25,7 @@ describe('an app instance', () => {
     }
     y = window.document.querySelector('#lmvc-test-controller');
     expect(y, 'dom element not removed after scope destroyed.').is.null;
-    let c = <any>z?.view[0];
+    let c = <any>z[0].view[0];
     expect(c).not.empty;
     expect(c.created, 'view method $created() not invoked.').is.true;
     expect(c.disposed, 'view method $dispose() not invoked.').is.true;

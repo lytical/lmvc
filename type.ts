@@ -9,7 +9,7 @@ import type { Subscribable } from 'rxjs';
 
 export interface lmvc_app {
   create_view_instance(id: string): Promise<lmvc_view>;
-  find_scope(node: Node): lmvc_scope | undefined;
+  find_scope(node: Node): lmvc_scope[] | undefined;
   load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope[]>;
   load_scope(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope>;
   register_view(id: string, cstor: __cstor<lmvc_view>): void;
@@ -18,12 +18,12 @@ export interface lmvc_app {
 export interface lmvc_scope<_t_ = unknown> {
   app: lmvc_app;
   args?: string | string[];
-  controller: lmvc_controller;
-  descendant?: lmvc_scope[];
+  controller: lmvc_controller<_t_>;
+  descendant?: lmvc_scope<_t_>[];
   node: Node;
   parent?: lmvc_scope;
   template: Node;
-  view: lmvc_view[];
+  view: lmvc_view<_t_>[];
 }
 
 export interface lmvc_view<_t_ = unknown> {
@@ -76,7 +76,7 @@ export interface lmvc_view<_t_ = unknown> {
    * the associated scope.
    * this member is available for the entire life, after $create
    */
-  $scope?: lmvc_scope;
+  $scope?: lmvc_scope<_t_>;
 
   /**
    * the dom attribute value.
