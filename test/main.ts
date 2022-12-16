@@ -33,7 +33,7 @@ require(['mocha'], (mocha: any) => {
   mocha.setup('bdd');
   mocha.checkLeaks();
   require([
-    // 'lmvc/test/text',
+    'lmvc/test/text',
     'lmvc/test/app'
   ], () => mocha.run());
 });
