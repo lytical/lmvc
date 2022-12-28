@@ -6,12 +6,11 @@ please refer to your license agreement on the use of this file.
 
 import 'mocha';
 import { expect } from 'chai';
-
-// import { lmvc_app } from 'lmvc/app';
+import { fixture } from './global';
 
 describe('l text attribute', () => {
   it('can change text values', async () => {
-    expect(true).is.true;
+    expect(fixture.test_app, 'failed to allocate app.').is.not.undefined;
     // let x = new lmvc_app();
     // expect(x, 'failed to allocate app.').is.not.undefined;
     // await x.bootstrap();

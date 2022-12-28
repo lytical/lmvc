@@ -4,14 +4,14 @@
   please refer to your license agreement on the use of this file.
 */
 
-import { controller } from '../controller';
-import type { lmvc_controller, lmvc_model } from '../type';
+import { controller } from '../../controller';
+import type { lmvc_controller, lmvc_model } from '../../type';
 
 interface model extends lmvc_model {
   text?: string;
 }
 
-@controller({ html: 'lmvc/test/controller.html' })
+@controller({ html: 'lmvc/test/component/controller.html' })
 export class lmvc_test_controller implements lmvc_controller<model> {
   async $create() {
     this.created = true;
