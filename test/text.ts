@@ -16,11 +16,11 @@ describe('l:text attribute', () => {
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
         fixture.test_app.$model.text = 'foobar';
-        await fixture.timeout(10);
-        expect(y.textContent === 'foobar');
+        await fixture.timeout(1);
+        expect(y.textContent).equals('foobar');
         fixture.test_app.$model.text = 'barfoo';
-        await fixture.timeout(10);
-        expect(y.textContent === 'barfoo');
+        await fixture.timeout(1);
+        expect(y.textContent).equals('barfoo');
         y.parentNode?.removeChild(y);
       }
     }

@@ -20,12 +20,14 @@ before(() => {
 });
 
 interface model extends lmvc_model {
+  style?: string;
   text?: string;
 }
 
 export class fixture {
-  static test_app?: lmvc_app<model>;
   static timeout(delay?: number) {
     return new Promise<void>((res) => setTimeout(() => res(), delay));
   }
+
+  static test_app?: lmvc_app<model>;
 }

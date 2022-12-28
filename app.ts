@@ -159,10 +159,9 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
           if(item) {
             const match = view_attr_pattern.exec(item.name);
             if(match && match.index === 0) {
-              let name = item.name;
-              remove.push(name);
-              if(name.startsWith('*')) {
-                ctlr = <lmvc_controller>await this.create_view_instance(name.slice(1));
+              remove.push(item.name);
+              if(item.name.startsWith('*')) {
+                ctlr = <lmvc_controller>await this.create_view_instance(match.input.slice(1, match[0].length));
                 scope.view.push(ctlr);
                 views.push(ctlr);
                 ctlr.$scope = scope;
@@ -171,7 +170,7 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
                 ctlr.$value = item.value;
               }
               else {
-                let view = await this.create_view_instance(name);
+                let view = await this.create_view_instance(match.input.slice(0, match[0].length));
                 scope.view.push(view);
                 views.push(view);
                 view.$scope = scope;
