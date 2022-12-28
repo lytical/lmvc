@@ -11,7 +11,7 @@ interface model extends lmvc_model {
   text?: string;
 }
 
-@controller({ html: 'lmvc/test/component/controller.html' })
+@controller({ html: 'lmvc/test/item/controller.html' })
 export class lmvc_test_controller implements lmvc_controller<model> {
   async $create() {
     this.created = true;

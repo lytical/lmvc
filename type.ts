@@ -12,7 +12,7 @@ export interface lmvc_app {
   find_scope(node: Node): lmvc_scope[] | undefined;
   load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope[]>;
   load_scope(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope>;
-  register_view(id: string, cstor: __cstor<lmvc_view>): void;
+  register_view(id: string, cstor: Promise<__cstor<lmvc_view>>): void;
 }
 
 export interface lmvc_scope<_t_ = unknown> {

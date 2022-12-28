@@ -18,7 +18,7 @@ describe('an app instance', () => {
   it('can locate and destroy scopes', async () => {
     expect(fixture.test_app, 'failed to allocate app.').is.not.undefined;
     if(fixture.test_app) {
-      let y = window.document.querySelector('#lmvc-test-controller');
+      let y = window.document.querySelector('#test-app');
       expect(y, 'the test controller did not replace the dom element.').is.not.null;
       if(y) {
         let z = fixture.test_app.find_scope(y);
@@ -26,7 +26,7 @@ describe('an app instance', () => {
         for(let s of z) {
           await fixture.test_app.destroy_scope(s);
         }
-        y = window.document.querySelector('#lmvc-test-controller');
+        y = window.document.querySelector('#test-app');
         expect(y, 'dom element not removed after scope destroyed.').is.null;
         let c = <{
           created: boolean,

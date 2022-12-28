@@ -35,10 +35,10 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
   async create_view_instance(id: string): Promise<lmvc_view> {
     let cstor = this.view[id];
     if(!cstor) {
-      cstor = await $view.load_view(id);
+      cstor = $view.load_view(id);
       this.register_view(id, cstor);
     }
-    const rt = new cstor();
+    const rt = new (await cstor)();
     if(typeof rt.$create === 'function') {
       await rt.$create();
     }
@@ -264,7 +264,7 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
     return Promise.all(rt);
   }
 
-  register_view(id: string, cstor: __cstor<lmvc_view>) {
+  register_view(id: string, cstor: Promise<__cstor<lmvc_view>>) {
     console.assert(this.view[id] === undefined);
     this.view[id] = cstor;
   }
@@ -291,7 +291,7 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
 
   private observer?: MutationObserver;
   $scope?: lmvc_scope;
-  private readonly view: Record<string, __cstor<lmvc_view>> = {};
+  private readonly view: Record<string, Promise<__cstor<lmvc_view>>> = {};
   $model: _t_ = <any>{};
   $view = [];
 }
