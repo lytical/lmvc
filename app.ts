@@ -8,11 +8,11 @@ import { $view } from './view';
 import { $controller } from './controller';
 import { $model } from './model';
 import type { __cstor } from 'common/plain-object';
-import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_model, lmvc_scope, lmvc_view } from './type';
 
 const view_attr_pattern = /\*?\w[\w\-]*(:\w[\w\-]*){1,}/;
 
-export class lmvc_app implements lmvc_app_t, lmvc_controller {
+export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_controller<_t_> {
   constructor() {
     console.assert(document.body.parentNode !== null);
     if(document.body.parentNode !== null) {
@@ -293,6 +293,6 @@ export class lmvc_app implements lmvc_app_t, lmvc_controller {
   private observer?: MutationObserver;
   $scope?: lmvc_scope;
   private readonly view: Record<string, __cstor<lmvc_view>> = {};
-  $model = {};
+  $model: _t_ = <any>{};
   $view = [];
 }

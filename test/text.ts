@@ -8,36 +8,21 @@ import 'mocha';
 import { expect } from 'chai';
 import { fixture } from './global';
 
-describe('l text attribute', () => {
-  it('can change text values', async () => {
+describe('l:text attribute', () => {
+  it('can change text values via the $model', async () => {
     expect(fixture.test_app, 'failed to allocate app.').is.not.undefined;
-    // let x = new lmvc_app();
-    // expect(x, 'failed to allocate app.').is.not.undefined;
-    // await x.bootstrap();
-    // let y = window.document.querySelector('#lmvc-test-controller');
-    // expect(y, 'the test controller did not replace the dom element.').is.not.null;
-    // expect(y?.textContent, 'l:text view did not render $model.text value').equals('foobar this stuff');
-    // let z = x.find_scope(y!);
-    // expect(z, 'scope not found from the dom element.').is.not.null.and.is.not.empty;
-    // for(let s of z) {
-    //   await x.destroy_scope(s);
-    // }
-    // y = window.document.querySelector('#lmvc-test-controller');
-    // expect(y, 'dom element not removed after scope destroyed.').is.null;
-    // let c = <{
-    //   created: boolean,
-    //   disposed: boolean,
-    //   inited: boolean,
-    //   mounted: boolean,
-    //   readyed: boolean,
-    //   unmounted: boolean
-    // }>z[0].view[0];
-    // expect(c, 'controller is missing.').not.empty;
-    // expect(c.created, 'view method $created() not invoked.').is.true;
-    // expect(c.disposed, 'view method $dispose() not invoked.').is.true;
-    // expect(c.inited, 'view method $init() not invoked.').is.true;
-    // expect(c.mounted, 'view method $mount() not invoked.').is.true;
-    // expect(c.readyed, 'view method $ready() not invoked.').is.true;
-    // expect(c.unmounted, 'view method $unmount() not invoked.').is.true;
+    if(fixture.test_app) {
+      let y = window.document.querySelector('#test-text');
+      expect(y, 'the test element is not in the dom.').is.not.null;
+      if(y) {
+        fixture.test_app.$model.text = 'foobar';
+        await fixture.timeout(10);
+        expect(y.textContent === 'foobar');
+        fixture.test_app.$model.text = 'barfoo';
+        await fixture.timeout(10);
+        expect(y.textContent === 'barfoo');
+        y.parentNode?.removeChild(y);
+      }
+    }
   });
 });
