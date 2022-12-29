@@ -15,7 +15,7 @@ export interface lmvc_app {
   register_view(id: string, cstor: Promise<__cstor<lmvc_view>>): void;
 }
 
-export interface lmvc_scope<_t_ = unknown> {
+export interface lmvc_scope<_t_ = lmvc_model> {
   app: lmvc_app;
   args?: string | string[];
   controller: lmvc_controller<_t_>;
@@ -26,7 +26,7 @@ export interface lmvc_scope<_t_ = unknown> {
   view: lmvc_view<_t_>[];
 }
 
-export interface lmvc_view<_t_ = unknown> {
+export interface lmvc_view<_t_ = lmvc_model> {
   /**
    * provides a way to asynchronously complete the creation of the view.
    * this is the first method called after a view's constructor.
@@ -84,8 +84,8 @@ export interface lmvc_view<_t_ = unknown> {
   $value?: unknown;
 }
 
-export interface lmvc_controller<_t_ = unknown> extends lmvc_view<_t_> {
-  $model: lmvc_model;
+export interface lmvc_controller<_m_ = lmvc_model, _t_ = lmvc_model> extends lmvc_view<_t_> {
+  $model: _m_;
   $view: lmvc_view[];
 }
 

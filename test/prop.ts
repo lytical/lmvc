@@ -8,19 +8,19 @@ import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
 
-describe('l:text view', () => {
+describe('l:prop view', () => {
   it('can change text values via the $model', async () => {
     expect(test_app, 'failed to allocate app.').is.not.undefined;
     if(test_app) {
-      let y = window.document.querySelector('#test-text');
+      let y = window.document.querySelector('#test-prop');
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
-        test_app.$model.text = 'foobar';
-        await fixture.timeout(1);
-        expect(y.textContent).equals('foobar');
-        test_app.$model.text = 'barfoo';
-        await fixture.timeout(1);
-        expect(y.textContent).equals('barfoo');
+        test_app.$model.text = 'prop-value';
+        await fixture.timeout(10);
+        expect(y.textContent).equals('prop-value');
+        test_app.$model.text = 'prop-value11';
+        await fixture.timeout(10);
+        expect(y.textContent).equals('prop-value11');
         y.parentNode?.removeChild(y);
       }
     }

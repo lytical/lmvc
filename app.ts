@@ -1,4 +1,4 @@
-/* @preserve
+/* @preserve.
   (c) 2019 lytical, inc. all rights are reserved.
   lytical(r) is a registered trademark of lytical, inc.
   please refer to your license agreement on the use of this file.
@@ -8,16 +8,17 @@ import { $view } from './view';
 import { $controller } from './controller';
 import { $model } from './model';
 import type { __cstor } from 'common/plain-object';
-import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_model, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_scope, lmvc_view } from './type';
 
 const view_attr_pattern = /\*?\w[\w\-]*(:\w[\w\-]*){1,}/;
 
-export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_controller<_t_> {
+export class lmvc_app implements lmvc_app_t, lmvc_controller {
   constructor() {
-    console.assert(document.body.parentNode !== null);
-    if(document.body.parentNode !== null) {
+    const html = document.querySelector('html');
+    console.assert(html !== null);
+    if(html !== null) {
       this.observer = new MutationObserver(x => this.on_mutation(x).catch(ex => console.error(ex)));
-      this.observer.observe(document.body.parentNode, { childList: true, subtree: true });
+      this.observer.observe(html, { childList: true, subtree: true });
     }
   }
 
@@ -45,7 +46,7 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
     return rt;
   }
 
-  async destroy_scope(scope?: lmvc_scope<unknown>) {
+  async destroy_scope(scope?: lmvc_scope) {
     const ls = lmvc_app.get_scope_self_and_descendant(scope);
     if(ls.length) {
       ls[0].node.parentNode?.removeChild(ls[0].node);
@@ -115,6 +116,14 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
     for(let x of views) {
       x.$is_ready = true;
     }
+  }
+
+  private invoke_scoped_views(node: Node, method: string, filter = (_: lmvc_view) => true): PromiseLike<any> {
+    const scope = this.find_scope(node);
+    return scope ? $view.invoke_method(method, scope.reduce((rs, x) => {
+      rs.push(...x.view);
+      return rs;
+    }, <lmvc_view[]>[]), filter) : Promise.resolve();
   }
 
   private static join_attrib_value(name: string, target: Element, source: Element, seperator: string) {
@@ -245,14 +254,6 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
     return scope;
   }
 
-  private invoke_scoped_views(node: Node, method: string, filter = (_: lmvc_view) => true): PromiseLike<any> {
-    const scope = this.find_scope(node);
-    return scope ? $view.invoke_method(method, scope.reduce((rs, x) => {
-      rs.push(...x.view);
-      return rs;
-    }, <lmvc_view[]>[]), filter) : Promise.resolve();
-  }
-
   private on_mutation(recs: MutationRecord[]) {
     const rt: PromiseLike<any>[] = [];
     for(let x of recs) {
@@ -292,6 +293,8 @@ export class lmvc_app<_t_ extends lmvc_model> implements lmvc_app_t, lmvc_contro
   private observer?: MutationObserver;
   $scope?: lmvc_scope;
   private readonly view: Record<string, Promise<__cstor<lmvc_view>>> = {};
-  $model: _t_ = <any>{};
+  $model = <any>{};
   $view = [];
 }
+
+export default new lmvc_app();

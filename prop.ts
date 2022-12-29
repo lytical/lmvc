@@ -27,7 +27,7 @@ export class lmvc_prop extends lmvc_eval {
     if(this.target) {
       if(arg) {
         for(let x of arg.split('&')) {
-          lmvc_prop.obj.assing(this.target, x, value);
+          lmvc_prop.obj.assing(value, x, this.target);
         }
       }
       else {
