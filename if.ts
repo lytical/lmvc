@@ -14,10 +14,7 @@ export class lmvc_if extends lmvc_eval {
       const parent = this.place_holder.parentNode;
       if(parent) {
         parent.insertBefore(this.$scope!.node, this.place_holder);
-        parent.removeChild(this.place_holder!);
-        // if(typeof this.$mount === 'function') {
-        //   this.$mount();
-        // }
+        parent.removeChild(this.place_holder);
       }
     }
     else {

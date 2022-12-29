@@ -34,6 +34,9 @@ require(['mocha'], (mocha: any) => {
   mocha.checkLeaks();
   require([
     'lmvc/test/app',
+    'lmvc/test/class',
+    'lmvc/test/html',
+    'lmvc/test/if',
     'lmvc/test/prop',
     'lmvc/test/style',
     'lmvc/test/text'
