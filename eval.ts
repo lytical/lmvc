@@ -7,6 +7,7 @@
 import type { Unsubscribable } from 'rxjs';
 import { tokenize } from 'esprima';
 import { $model } from './model';
+import obj_util from '../common/obj-util';
 import type { lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
 export abstract class lmvc_eval implements lmvc_view {
@@ -24,13 +25,27 @@ export abstract class lmvc_eval implements lmvc_view {
         this.$arg = this.$arg.slice(1);
       }
       this.prop = [];
+      let is_member = false;
       tokenize(this.$value).forEach(node => {
-        if(node.type === 'Identifier') {
-          this.prop.push(node.value);
+        switch(node.type) {
+          case 'Identifier':
+            if(is_member) {
+              this.prop.push(`${this.prop.pop()}.${node.value}`);
+              is_member = false;
+            }
+            else {
+              this.prop.push(node.value);
+            }
+            break;
+          case 'Punctuator':
+            if(node.value === '.' && this.prop.length) {
+              is_member = true;
+            }
+            break;
         }
       });
       this.prop = Array.from(new Set(this.prop));
-      this.func = Function(`"use strict";return(function(${this.prop}){"use strict";return(${this.$value});})`)();
+      this.func = Function(`"use strict";return(function(${this.prop.map(x => x.replace('.', '_'))}){"use strict";return(${this.$value.replace(/(.)\.([_a-zA-Z])/g, '$1_$2')});})`)();
       this.dispose = $model.get_subject(this.$scope!.controller.$model)!.subscribe({
         next: msg => this.invoke!(msg)
       });
@@ -42,10 +57,9 @@ export abstract class lmvc_eval implements lmvc_view {
 
   private invoke(msg: lmvc_model_event[] = []) {
     if(this.func) {
-      const model = this.$scope!.controller.$model;
       this.update(this.func.apply(undefined, this.prop.map(x => {
-        const rt = model[x];
-        return typeof rt === 'function' ? rt.bind(model) : rt;
+        const rt = obj_util.select(x, this.$scope!.controller.$model);
+        return typeof rt === 'function' ? rt.bind(this.$scope!.controller.$model) : rt;
       })), msg, this.$arg);
     }
   }

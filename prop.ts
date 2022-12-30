@@ -7,7 +7,7 @@ please refer to your license agreement on the use of this file.
 import { lmvc_eval } from './eval';
 import { view } from './view';
 import { $controller } from './controller';
-import { obj_util } from 'common/obj-util';
+import obj_util from 'common/obj-util';
 import type { lmvc_model, lmvc_controller } from './type';
 
 @view()
@@ -27,7 +27,7 @@ export class lmvc_prop extends lmvc_eval {
     if(this.target) {
       if(arg) {
         for(let x of arg.split('&')) {
-          lmvc_prop.obj.assing(value, x, this.target);
+          obj_util.assing(value, x, this.target);
         }
       }
       else {
@@ -37,5 +37,4 @@ export class lmvc_prop extends lmvc_eval {
   }
 
   target?: lmvc_model;
-  private static obj = new obj_util();
 }

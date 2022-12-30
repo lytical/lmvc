@@ -13,6 +13,12 @@
   <div id="mocha"></div>
   <div id="test-app" *l:test:item:controller></div>
   <div id="test-attr" l:attr?foobar="text" l:attr?disabled="text==='disable'">test-attr</div>
+  <div id="test-bind">
+    <div l:text="text"></div>
+    <div l:text="item.text"></div>
+    <input type="text" l:bind="text" />
+    <input type="text" l:bind="item.text" />
+  </div>
   <div id="test-class" l:class?text-muted="text==='mute'" l:class?bt-4&pb-2="text==='space'">test-class</div>
   <div id="test-html" l:html="text">test-html</div>
   <div id="test-if" l:if="text!=='hide'">test-if</div>

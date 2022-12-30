@@ -139,24 +139,4 @@ export class $model {
     const rt = $model.get_subject(model);
     return <_t_>(rt?.get_underlying() || model);
   }
-
-  static get_value(prop: string[], model: Record<string, any>): any {
-    for(let i = 0, max = prop.length; model && i < max; ++i) {
-      model = model[prop[i]];
-    }
-    return model;
-  }
-
-  static set_value(prop: string[], value: any, model: Record<string, any>): any {
-    for(let i = 0, max = prop.length - 1; model && i < max; ++i) {
-      model = model[prop[i]];
-    }
-    if(typeof model !== 'object' || model === null) {
-      console.warn(`mvc unable to bind to (${prop.join('.')}).`);
-      return undefined;
-    }
-    const nm = prop[prop.length - 1];
-    model[nm] = value;
-    return model[nm];
-  }
 }
