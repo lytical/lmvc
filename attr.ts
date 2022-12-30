@@ -46,7 +46,12 @@ export class lmvc_attr extends lmvc_eval {
             }
             break;
           default:
-            (<Element | undefined>this.$scope?.node)?.setAttribute(x, value?.toString());
+            if(value === undefined) {
+              (<Element | undefined>this.$scope?.node)?.removeAttribute(x);
+            }
+            else {
+              (<Element | undefined>this.$scope?.node)?.setAttribute(x, value?.toString());
+            }
             break;
         }
       });
