@@ -39,7 +39,6 @@ export class lmvc_bind implements lmvc_view {
   }
 
   private on_input(evt: InputEvent) {
-    console.debug({ evt });
     this.updating = true;
     obj_util.assing(this.get_value(evt.target!, typeof this.$arg === 'string' ? this.$arg : undefined), this.prop!, this.$scope!.controller.$model);
   }
@@ -56,7 +55,6 @@ export class lmvc_bind implements lmvc_view {
       }
     }
     else {
-      console.debug({ value });
       (<HTMLInputElement>node).value = value || '';
     }
   }

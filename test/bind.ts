@@ -15,8 +15,14 @@ describe('l:bind view', () => {
       let y = window.document.querySelector('#test-bind');
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
-        await fixture.timeout(1);
-        //y.parentNode?.removeChild(y);
+        let i = <HTMLInputElement | null>y.firstElementChild;
+        expect(i, 'the test element is not in the dom.').is.not.null;
+        if(i) {
+          test_app.$model.text = 'bind1';
+
+          await fixture.timeout(1);
+        }
+        y.parentNode?.removeChild(y);
       }
     }
   });
