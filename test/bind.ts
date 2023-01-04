@@ -19,8 +19,12 @@ describe('l:bind view', () => {
         expect(i, 'the test element is not in the dom.').is.not.null;
         if(i) {
           test_app.$model.text = 'bind1';
-
           await fixture.timeout(1);
+          expect(i.value).equals('bind1');
+          i.value = 'bind2';
+          i.dispatchEvent(new Event('input')); // setting value property doesn't fire event.
+          await fixture.timeout(1);
+          expect(test_app.$model.text).equals('bind2');
         }
         y.parentNode?.removeChild(y);
       }
