@@ -37,6 +37,7 @@ require(['mocha'], (mocha: any) => {
     'lmvc/test/attr',
     'lmvc/test/bind',
     'lmvc/test/class',
+    'lmvc/test/for',
     'lmvc/test/html',
     'lmvc/test/if',
     'lmvc/test/on',
