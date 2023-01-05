@@ -16,7 +16,7 @@ describe('l:for view', () => {
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
         await fixture.timeout(1);
-        y.parentNode?.removeChild(y);
+       // y.parentNode?.removeChild(y);
       }
     }
   });

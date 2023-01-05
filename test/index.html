@@ -17,7 +17,9 @@
     <input type="text" l:bind="text" />
     <input type="text" l:bind="item.text" />
   </div>
-  <div id="test-for"></div>
+  <div id="test-for">
+    <div l:for="(i, x) of items" l:text="i+text+x"></div>
+  </div>
   <div id="test-class" l:class?text-muted="text==='mute'" l:class?bt-4&pb-2="text==='space'">test-class</div>
   <div id="test-html" l:html="text">test-html</div>
   <div id="test-if" l:if="text!=='hide'">test-if</div>
