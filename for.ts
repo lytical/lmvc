@@ -4,11 +4,11 @@ lytical(r) is a registered trademark of lytical, inc.
 please refer to your license agreement on the use of this file.
 */
 
-//import { tokenize } from 'esprima';
-//import { $model } from './model';
+import { tokenize } from 'esprima';
+import { $model } from './model';
 import { view } from './view';
-//import type { Unsubscribable } from 'rxjs';
-import type { lmvc_view } from './type';
+import type { Unsubscribable } from 'rxjs';
+import type { lmvc_scope, lmvc_view } from './type';
 
 @view()
 export class lmvc_for implements lmvc_view {
@@ -23,7 +23,8 @@ export class lmvc_for implements lmvc_view {
       }
     }, this);
   }
-
+  */
+  /*
   private $create_model(item: unknown, idx: number): model_like {
     const self = this;
     const rt = new Proxy(this.$model, {
@@ -36,6 +37,7 @@ export class lmvc_for implements lmvc_view {
     });
     return rt;
   }
+  */
 
   $dispose() {
     if(this.dispose) {
@@ -45,9 +47,6 @@ export class lmvc_for implements lmvc_view {
   }
 
   async $init(): Promise<void> {
-    this.$place_holder = window.document.createComment('');
-    this.is_eq = (l: unknown, r: unknown) => l === r;
-    this.task = Promise.resolve();
     if(this.$value) {
       const value = tokenize(this.$value);
       if(value.length >= 3 &&
@@ -100,12 +99,10 @@ export class lmvc_for implements lmvc_view {
             }
             if(this.prop.length) {
               this.prop = Array.from(new Set(this.prop));
-              this.$view = [];
-              this.leaf_pool = [];
-              this.template = <Element>this.$scope.template.cloneNode(true);
+              this.template = <Element>this.$scope!.template.cloneNode(true);
               this.template.removeAttribute('l:for');
               this.func = Function(`"use strict";return(function(${this.prop}){"use strict";return(${statement.map(x => x.value).join('')});})`)();
-              this.dispose = mvc_model.get_subject(this.$model)!.subscribe({
+              this.dispose = $model.get_subject(this.$scope!.controller.$model)!.subscribe({
                 next: () => this.render()
               });
               return;
@@ -117,27 +114,35 @@ export class lmvc_for implements lmvc_view {
     console.error(`l:for invalid statement "${this.$value}")".`);
   }
 
+  private render() {
+    // if(this.governor) {
+    //   clearTimeout(this.governor);
+    // }
+    // this.governor = setTimeout(() => {
+    //   this.governor = undefined;
+    //   this.task = this.task.then(() => this.do_render(), ex => console.error(ex));
+    // }, 100);
+  }
+
   $mount() {
     this.render();
   }
 
   $ready() {
-    const node = this.$node;
+    const node = this.$scope!.node;
     console.assert(node.parentNode !== null, 'unexpected (for) view element has no parent');
-    node.parentNode!.replaceChild(this.$place_holder!, this.$node);
-    this.render();
-  }
-
-  private render() {
-    if(this.governor) {
-      clearTimeout(this.governor);
+    if(node.parentNode) {
+      node.parentNode.replaceChild(this.$place_holder!, this.$scope!.node);
     }
-    this.governor = setTimeout(() => {
-      this.governor = undefined;
-      this.task = this.task.then(() => this.do_render(), ex => console.error(ex));
-    }, 100);
+
+    this.func;
+    this.is_eq;
+    this.is_in_loop;
+    this.idx_nm;
+    this.task;
   }
 
+  /*
   private async do_render(): Promise<void> {
     if(document.body.contains(this.$place_holder!)) {
       const model = this.$model;
@@ -217,21 +222,23 @@ export class lmvc_for implements lmvc_view {
     }
   }
 
-  dispose?: Unsubscribable;
-  func!: Function;
   governor?: number;
-  idx_nm?: string;
-  is_eq!: (l: unknown, r: unknown) => boolean;
-  is_in_loop!: boolean;
-  item_nm?: string;
   leaf_pool!: lmvc_controller[];
-  prop!: string[];
   task!: Promise<void>;
-  template!: Element;
   $value?: string;
   $view!: lmvc_controller[];
   */
-  
+
+  private dispose?: Unsubscribable;
+  private func?: Function;
+  private is_eq: (l: unknown, r: unknown) => boolean = (l: unknown, r: unknown) => l === r;
+  private is_in_loop?: boolean;
+  private idx_nm?: string;
+  private item_nm?: string;
+  private prop!: string[];
+  private task = Promise.resolve();
+  private template?: Element;
   $place_holder = document.createComment('');
-  $value?: unknown;
+  $scope?: lmvc_scope;
+  $value?: string;
 }
