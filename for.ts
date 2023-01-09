@@ -8,7 +8,7 @@ import { tokenize } from 'esprima';
 import { $model } from './model';
 import { view } from './view';
 import type { Unsubscribable } from 'rxjs';
-import type { lmvc_scope, lmvc_view } from './type';
+import type { lmvc_model, lmvc_scope, lmvc_view } from './type';
 
 @view()
 export class lmvc_for implements lmvc_view {
@@ -24,10 +24,10 @@ export class lmvc_for implements lmvc_view {
     }, this);
   }
   */
-  /*
-  private $create_model(item: unknown, idx: number): model_like {
+
+  private create_model(item: unknown, idx: number): lmvc_model {
     const self = this;
-    const rt = new Proxy(this.$model, {
+    const rt = new Proxy(this.$scope!.controller.$model, {
       get(target: any, property: string | symbol | number, receiver?: any) {
         if(property === self.idx_nm) {
           return idx;
@@ -37,7 +37,6 @@ export class lmvc_for implements lmvc_view {
     });
     return rt;
   }
-  */
 
   $dispose() {
     if(this.dispose) {
@@ -140,6 +139,7 @@ export class lmvc_for implements lmvc_view {
     this.is_in_loop;
     this.idx_nm;
     this.task;
+    this.create_model;
   }
 
   /*
