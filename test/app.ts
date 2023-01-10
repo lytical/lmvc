@@ -45,7 +45,7 @@ describe('an app instance', () => {
         mounted: boolean,
         readyed: boolean,
         unmounted: boolean
-      }>z[0].view[0];
+      }><unknown>z[0].controller;
       expect(c, 'controller is missing.').not.empty;
       expect(c.created, 'view method $created() not invoked.').is.true;
       expect(c.disposed, 'view method $dispose() not invoked.').is.true;

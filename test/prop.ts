@@ -8,17 +8,24 @@ import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
 
+let model: any;
+
+fixture.after_bootstrap(ctlr => {
+  model = ctlr.$model;
+});
+
 describe('l:prop view', () => {
   it('can change text values via the $model', async () => {
     expect(test_app, 'failed to allocate app.').is.not.undefined;
+    expect(model, 'failed to bootstrap app.').is.not.undefined;
     if(test_app) {
       let y = window.document.querySelector('#test-prop');
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
-        test_app.$model.text = 'prop-value';
+        model.text = 'prop-value';
         await fixture.timeout(10);
         expect(y.textContent).equals('prop-value');
-        test_app.$model.text = 'prop-value11';
+        model.text = 'prop-value11';
         await fixture.timeout(10);
         expect(y.textContent).equals('prop-value11');
         y.parentNode?.removeChild(y);

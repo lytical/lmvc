@@ -12,7 +12,7 @@ import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_scope, lmvc_view } f
 
 const view_attr_pattern = /\*?\w[\w\-]*(:\w[\w\-]*){1,}/;
 
-export class lmvc_app implements lmvc_app_t, lmvc_controller {
+export class lmvc_app implements lmvc_app_t {
   constructor() {
     const html = document.querySelector('html');
     console.assert(html !== null);
@@ -22,15 +22,17 @@ export class lmvc_app implements lmvc_app_t, lmvc_controller {
     }
   }
 
-  async bootstrap(): Promise<void> {
-    console.assert(!this.$scope && document.body.parentNode !== null);
+  async bootstrap(ctlr: lmvc_controller = { $model: {}, $view: [] }): Promise<lmvc_controller> {
+    console.assert(document.body.parentNode !== null);
     if(document.body.parentNode !== null) {
-      const views: lmvc_view[] = [this];
-      this.$scope = await this.load_scope(document.body.parentNode, this, views);
-      this.$scope.descendant = await this.load_descendants(this.$scope.node, this, views);
+      const views: lmvc_view[] = [ctlr];
+      ctlr.$model = $model.make_model(ctlr.$model || {});
+      ctlr.$scope = await this.load_scope(document.body.parentNode, ctlr, views);
+      await this.load_descendants(ctlr.$scope.node, ctlr, views);
       await lmvc_app.init_views(views);
-      await $view.invoke_method('$mount', lmvc_app.get_scope_views_self_and_descendant(this.$scope), x => x.$is_ready === true);
+      await $view.invoke_method('$mount', this.get_scope_views_self_and_descendant(ctlr.$scope), x => x.$is_ready === true);
     }
+    return ctlr;
   }
 
   async create_view_instance(id: string): Promise<lmvc_view> {
@@ -46,8 +48,8 @@ export class lmvc_app implements lmvc_app_t, lmvc_controller {
     return rt;
   }
 
-  async destroy_scope(scope?: lmvc_scope) {
-    const ls = lmvc_app.get_scope_self_and_descendant(scope);
+  async destroy_scope(scope: lmvc_scope) {
+    const ls = this.get_scope_self_and_descendant(scope);
     if(ls.length) {
       ls[0].node.parentNode?.removeChild(ls[0].node);
       const task: Promise<void>[] = [];
@@ -66,37 +68,27 @@ export class lmvc_app implements lmvc_app_t, lmvc_controller {
   }
 
   find_scope(node: Node) {
-    // todo: this should find all scopes for a node since a node can have one or two.
-    const stack: lmvc_scope[] = [];
     const rt: lmvc_scope[] = [];
-    let scope = this.$scope;
-    while(scope) {
+    for(let scope of this.scope) {
       if(scope.node === node) {
         rt.push(scope);
       }
-      if(scope.descendant) {
-        stack.push(...scope.descendant);
-      }
-      scope = stack.shift();
     }
     return rt;
   }
 
-  static get_scope_self_and_descendant(scope?: lmvc_scope) {
+  private get_scope_self_and_descendant(scope: lmvc_scope) {
     const rt: lmvc_scope[] = [];
-    const stack: lmvc_scope[] = [];
-    while(scope) {
-      rt.push(scope);
-      if(scope.descendant) {
-        stack.push(...scope.descendant);
+    for(let x of this.scope) {
+      if(scope.node.contains(x.node)) {
+        rt.push(x);
       }
-      scope = stack.shift();
     }
     return rt;
   }
 
-  static get_scope_views_self_and_descendant(scope: lmvc_scope) {
-    return lmvc_app
+  private get_scope_views_self_and_descendant(scope: lmvc_scope) {
+    return this
       .get_scope_self_and_descendant(scope)
       .map(x => x.view).reduce((rs, x) => {
         rs.push(...x);
@@ -145,10 +137,10 @@ export class lmvc_app implements lmvc_app_t, lmvc_controller {
     return Promise.all(wait);
   }
 
-  async load_scope(node: Node, ctlr1: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope> {
+  async load_scope(node: Node, ctlr: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope> {
     const scope: lmvc_scope = {
       app: this,
-      controller: ctlr1,
+      controller: ctlr,
       node,
       template: node.cloneNode(),
       view: []
@@ -241,7 +233,10 @@ export class lmvc_app implements lmvc_app_t, lmvc_controller {
               scope.node = node[0];
             }
           }
-          scope.descendant = await this.load_descendants(scope.node, ctlr, views);
+          ctlr.$view = (await this.load_descendants(scope.node, ctlr, views)).reduce((rs, x) => {
+            rs.push(...x.view);
+            return rs;
+          }, <lmvc_view[]>[]);
         }
       }
     }
@@ -251,6 +246,7 @@ export class lmvc_app implements lmvc_app_t, lmvc_controller {
     if(is_root) {
       await lmvc_app.init_views(views.concat(scope.view));
     }
+    this.scope.push(scope);
     return scope;
   }
 
@@ -290,11 +286,10 @@ export class lmvc_app implements lmvc_app_t, lmvc_controller {
     }
   }
 
+  controller?: lmvc_controller<any>;
   private observer?: MutationObserver;
-  $scope?: lmvc_scope;
+  private scope: lmvc_scope[] = [];
   private readonly view: Record<string, Promise<__cstor<lmvc_view>>> = {};
-  $model = <any>{};
-  $view = [];
 }
 
 export default new lmvc_app();

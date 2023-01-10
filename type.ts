@@ -9,17 +9,18 @@ import type { Subscribable } from 'rxjs';
 
 export interface lmvc_app {
   create_view_instance(id: string): Promise<lmvc_view>;
+  destroy_scope(scope: lmvc_scope): Promise<void>;
   find_scope(node: Node): lmvc_scope[] | undefined;
   load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope[]>;
   load_scope(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope>;
   register_view(id: string, cstor: Promise<__cstor<lmvc_view>>): void;
+  controller?: lmvc_controller<any>;
 }
 
 export interface lmvc_scope<_t_ = lmvc_model> {
   app: lmvc_app;
   args?: string | string[];
   controller: lmvc_controller<_t_>;
-  descendant?: lmvc_scope<_t_>[];
   node: Node;
   parent?: lmvc_scope;
   template: Node;

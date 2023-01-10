@@ -11,8 +11,8 @@ import test_app from '../app';
 let evt: Event | undefined;
 let val: number | string | undefined;
 
-fixture.before_bootstrap(() => {
-  (<any>test_app).on_load = (e?: Event, v?: string | number) => {
+fixture.before_bootstrap(ctlr => {
+  ctlr.on_load = (e?: Event, v?: string | number) => {
     evt = e;
     val = v;
   }

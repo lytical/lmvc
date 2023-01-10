@@ -8,9 +8,16 @@ import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
 
+let model: any;
+
+fixture.after_bootstrap(ctlr => {
+  model = ctlr.$model;
+});
+
 describe('l:for view', () => {
   it('can render elements via the $model', async () => {
     expect(test_app, 'failed to allocate app.').is.not.undefined;
+    expect(model, 'failed to bootstrap app.').is.not.undefined;
     if(test_app) {
       let y = window.document.querySelector('#test-for');
       expect(y, 'the test element is not in the dom.').is.not.null;

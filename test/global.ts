@@ -6,21 +6,37 @@
 
 import { expect } from 'chai';
 import lmvc_app from '../app';
+import type { lmvc_controller } from 'lmvc/type';
 
 after(() => {
 });
 
 before(async () => {
   expect(lmvc_app, 'failed to allocate app.').is.not.undefined;
-  let task: Promise<any>[] = <any>before_bootstrap.map(x => x()).filter(x => typeof x === 'object' && typeof x.then === 'function');
+  const root: root_controller = {
+    $model: {},
+    $view: []
+  };
+  let task: Promise<any>[] = <any>before_bootstrap.map(x => x(root)).filter(x => typeof x === 'object' && typeof x.then === 'function');
   if(task.length) {
     await Promise.all(task);
   }
-  return await lmvc_app.bootstrap();
+  const rt = await lmvc_app.bootstrap(root);
+  task = <any>after_bootstrap.map(x => x(root)).filter(x => typeof x === 'object' && typeof x.then === 'function');
+  if(task.length) {
+    await Promise.all(task);
+  }
+  after_bootstrap.splice(0);
+  before_bootstrap.splice(0);
+  return rt;
 });
 
 export class fixture {
-  static before_bootstrap(cb: () => Promise<any> | void) {
+  static after_bootstrap(cb: (ctlr: root_controller) => Promise<any> | void) {
+    after_bootstrap.push(cb);
+  }
+
+  static before_bootstrap(cb: (ctlr: root_controller) => Promise<any> | void) {
     before_bootstrap.push(cb);
   }
 
@@ -29,4 +45,9 @@ export class fixture {
   }
 }
 
-const before_bootstrap: (() => Promise<any> | void)[] = [];
+const after_bootstrap: ((ctlr: root_controller) => Promise<any> | void)[] = [];
+const before_bootstrap: ((ctlr: root_controller) => Promise<any> | void)[] = [];
+
+export interface root_controller extends lmvc_controller {
+  on_load?: (e?: Event, v?: string | number) => void;
+}

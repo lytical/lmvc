@@ -8,29 +8,36 @@ import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
 
+let model: any;
+
+fixture.after_bootstrap(ctlr => {
+  model = ctlr.$model;
+});
+
 describe('l:attr view', () => {
   it('can remove and insert attributes for an element via the $model', async () => {
     expect(test_app, 'failed to allocate app.').is.not.undefined;
+    expect(model, 'failed to bootstrap app.').is.not.undefined;
     if(test_app) {
       let y = window.document.querySelector('#test-attr');
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
-        test_app.$model.text = undefined;
+        model.text = undefined;
         await fixture.timeout(1);
         let val = y.getAttribute('foobar');
         expect(val, 'unexpected "foobar" attribute').is.null;
         expect(y.hasAttribute('disabled'), 'unexpected "disabled" attribute').is.false;
-        test_app.$model.text = 'testing';
+        model.text = 'testing';
         await fixture.timeout(1);
         val = y.getAttribute('foobar');
         expect(val, 'attribute not added').equals('testing');
         expect(y.hasAttribute('disabled'), 'unexpected "disabled" attribute').is.false;
-        test_app.$model.text = 'this out';
+        model.text = 'this out';
         await fixture.timeout(1);
         val = y.getAttribute('foobar');
         expect(val, 'attribute not added').equals('this out');
         expect(y.hasAttribute('disabled'), 'unexpected "disabled" attribute').is.false;
-        test_app.$model.text = 'disable';
+        model.text = 'disable';
         await fixture.timeout(1);
         val = y.getAttribute('foobar');
         expect(val, 'attribute not added').equals('disable');
