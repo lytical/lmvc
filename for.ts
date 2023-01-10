@@ -8,7 +8,7 @@ import { tokenize } from 'esprima';
 import { $model } from './model';
 import { view } from './view';
 import type { Unsubscribable } from 'rxjs';
-import type { lmvc_model, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_model, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
 @view()
 export class lmvc_for implements lmvc_view {
@@ -98,11 +98,9 @@ export class lmvc_for implements lmvc_view {
             }
             if(this.prop.length) {
               this.prop = Array.from(new Set(this.prop));
-              this.template = <Element>this.$scope!.template.cloneNode(true);
-              this.template.removeAttribute('l:for');
               this.func = Function(`"use strict";return(function(${this.prop}){"use strict";return(${statement.map(x => x.value).join('')});})`)();
               this.dispose = $model.get_subject(this.$scope!.controller.$model)!.subscribe({
-                next: () => this.render()
+                next: evt => this.render(evt)
               });
               return;
             }
@@ -113,18 +111,20 @@ export class lmvc_for implements lmvc_view {
     console.error(`l:for invalid statement "${this.$value}")".`);
   }
 
-  private render() {
-    // if(this.governor) {
-    //   clearTimeout(this.governor);
-    // }
-    // this.governor = setTimeout(() => {
-    //   this.governor = undefined;
-    //   this.task = this.task.then(() => this.do_render(), ex => console.error(ex));
-    // }, 100);
+  private render(evt: lmvc_model_event[]) {
+    if((!evt.length || evt.some(x => this.prop.some(y => x.property == y || (typeof x.property === 'string' && x.property.startsWith(y))))) && this.func) {
+      if(this.governor) {
+        clearTimeout(this.governor);
+      }
+      this.governor = setTimeout(() => {
+        this.governor = undefined;
+        this.do_render();
+      }, 10);
+    }
   }
 
   $mount() {
-    this.render();
+    this.render([]);
   }
 
   $ready() {
@@ -134,22 +134,21 @@ export class lmvc_for implements lmvc_view {
       node.parentNode.replaceChild(this.$place_holder!, this.$scope!.node);
     }
 
-    this.func;
     this.is_eq;
     this.is_in_loop;
     this.idx_nm;
-    this.task;
     this.create_model;
   }
 
-  /*
-  private async do_render(): Promise<void> {
+  private do_render() {
+    const model = this.$scope!.controller.$model;
+    const items = this.func!.apply(undefined, this.prop.map(x => {
+      const rt = model[x];
+      return typeof rt === 'function' ? rt.bind(model) : rt;
+    }));
+    console.debug('rendering', items);
+    /*
     if(document.body.contains(this.$place_holder!)) {
-      const model = this.$model;
-      const items = this.func.apply(undefined, this.prop.map(x => {
-        const rt = model[x];
-        return typeof rt === 'function' ? rt.bind(model) : rt;
-      }));
       const update_leaf = (item: unknown, idx: number) => {
         return this.update_leaf(item, idx);
       }
@@ -179,8 +178,10 @@ export class lmvc_for implements lmvc_view {
         this.leaf_pool.push(...prune);
       }
     }
+    */
   }
 
+  /*
   private async set_leaf(item: unknown, idx: number): Promise<void> {
     if(this.$view[idx]?.$scope.model[this.item_nm!] !== item) {
       const rs = await this.create_leaf(item, idx);
@@ -222,22 +223,19 @@ export class lmvc_for implements lmvc_view {
     }
   }
 
-  governor?: number;
   leaf_pool!: lmvc_controller[];
-  task!: Promise<void>;
   $value?: string;
   $view!: lmvc_controller[];
   */
 
   private dispose?: Unsubscribable;
   private func?: Function;
+  private governor?: number;
   private is_eq: (l: unknown, r: unknown) => boolean = (l: unknown, r: unknown) => l === r;
   private is_in_loop?: boolean;
   private idx_nm?: string;
   private item_nm?: string;
   private prop!: string[];
-  private task = Promise.resolve();
-  private template?: Element;
   $place_holder = document.createComment('');
   $scope?: lmvc_scope;
   $value?: string;

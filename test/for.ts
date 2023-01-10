@@ -22,8 +22,14 @@ describe('l:for view', () => {
       let y = window.document.querySelector('#test-for');
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
-        await fixture.timeout(1);
-       // y.parentNode?.removeChild(y);
+        expect(y.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(1);
+        for(let x = 0; x < y.childNodes.length; ++x) {
+          const i = y.childNodes.item(x);
+          expect(i instanceof Comment || i instanceof Text, 'unexpected rendered element').is.true;
+        }
+        model.item = { values: ['foo', 'bar'] };
+        await fixture.timeout(110);
+        // y.parentNode?.removeChild(y);
       }
     }
   });
