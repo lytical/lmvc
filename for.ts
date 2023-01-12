@@ -43,6 +43,9 @@ export class lmvc_for implements lmvc_view {
       this.dispose.unsubscribe();
       this.dispose = undefined;
     }
+    if(this.$place_holder.parentElement) {
+      this.$place_holder.parentElement.removeChild(this.$place_holder);
+    }
   }
 
   async $init(): Promise<void> {
@@ -99,6 +102,9 @@ export class lmvc_for implements lmvc_view {
             if(this.prop.length) {
               this.prop = Array.from(new Set(this.prop));
               this.func = Function(`"use strict";return(function(${this.prop}){"use strict";return(${statement.map(x => x.value).join('')});})`)();
+              this.leaf_pool.push(this.$scope!);
+              this.template = <Element>this.$scope!.template.cloneNode(true);
+              this.template.removeAttribute('l:for');
               this.dispose = $model.get_subject(this.$scope!.controller.$model)!.subscribe({
                 next: evt => this.render(evt)
               });
@@ -133,7 +139,6 @@ export class lmvc_for implements lmvc_view {
     if(node.parentNode) {
       node.parentNode.replaceChild(this.$place_holder!, this.$scope!.node);
     }
-
     this.is_eq;
     this.is_in_loop;
     this.idx_nm;
@@ -235,7 +240,9 @@ export class lmvc_for implements lmvc_view {
   private is_in_loop?: boolean;
   private idx_nm?: string;
   private item_nm?: string;
+  private leaf_pool: lmvc_scope[] = [];
   private prop!: string[];
+  private template?: Element;
   $place_holder = document.createComment('');
   $scope?: lmvc_scope;
   $value?: string;
