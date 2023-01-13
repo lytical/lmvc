@@ -8,40 +8,28 @@ import { tokenize } from 'esprima';
 import { $model } from './model';
 import { view } from './view';
 import type { Unsubscribable } from 'rxjs';
-import type { lmvc_model, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
 const leaf_pool_max_sz = 50;
 
 @view()
 export class lmvc_for implements lmvc_view {
-  private create_model(item: unknown, idx: number): lmvc_model {
-    const self = this;
-    const rt = new Proxy(this.$scope!.controller.$model, {
-      get(target: any, property: string | symbol | number, receiver?: any) {
-        if(property === self.idx_nm) {
-          return idx;
-        }
-        return property === self.item_nm ? item : Reflect.get(target, property, receiver);
-      }
-    });
-    return rt;
-  }
-
   private async do_render() {
     const parent = this.$place_holder.parentElement;
     if(parent) {
       const model = this.$scope!.controller.$model;
-      const items = this.func!.apply(undefined, this.prop.map(x => {
+      this.items = this.func!.apply(undefined, this.prop.map(x => {
         const rt = model[x];
         return typeof rt === 'function' ? rt.bind(model) : rt;
       }));
-      if(items) {
+      if(this.items) {
         const remove: lmvc_scope[] = [];
         const idx_nm = this.idx_nm;
         const item_nm = this.item_nm;
-        for(let i = 0, max = Math.max(items.length, this.leaf.length); i < max; ++i) {
+        const self = this;
+        for(let i = 0, max = Math.max(this.items.length, this.leaf.length); i < max; ++i) {
           let leaf: lmvc_scope | undefined = this.leaf[i];
-          if(i < items.length) {
+          if(i < this.items.length) {
             if(!leaf) {
               const scope = this.leaf_pool.length ?
                 this.leaf_pool.pop() :
@@ -55,6 +43,7 @@ export class lmvc_for implements lmvc_view {
                         if(property === idx_nm) {
                           return idx;
                         }
+                        const items = self.items || [];
                         return property === item_nm ? items[idx] : Reflect.get(target, property, receiver);
                       }
                     });
@@ -70,6 +59,7 @@ export class lmvc_for implements lmvc_view {
           }
         }
         for(let x of remove) {
+          this.leaf.splice(this.leaf.indexOf(x), 1);
           if(this.leaf_pool.length < leaf_pool_max_sz) {
             parent.removeChild(x.node);
             x.controller = this.$scope!.controller;
@@ -186,8 +176,6 @@ export class lmvc_for implements lmvc_view {
     if(node.parentNode) {
       node.parentNode.replaceChild(this.$place_holder!, this.$scope!.node);
     }
-    this.idx_nm;
-    this.create_model;
   }
 
   private dispose?: Unsubscribable;
@@ -195,6 +183,7 @@ export class lmvc_for implements lmvc_view {
   private governor?: number;
   private idx_nm?: string;
   private item_nm?: string;
+  private items?: unknown[];
   private leaf: lmvc_scope[] = [];
   private leaf_pool: lmvc_scope[] = [];
   private prop!: string[];

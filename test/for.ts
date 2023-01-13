@@ -27,9 +27,39 @@ describe('l:for view', () => {
           const i = y.childNodes.item(x);
           expect(i instanceof Comment || i instanceof Text, 'unexpected rendered element').is.true;
         }
+        const assert_all = async (y: Element) => {
+          await fixture.timeout(20);
+          expect(y.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(model.item.values.length);
+          let cnt = 0;
+          for(let x = 0; x < y.childNodes.length; ++x) {
+            const i = y.childNodes.item(x);
+            expect(i instanceof Comment || i instanceof Text || i instanceof HTMLDivElement, 'unexpected rendered element').is.true;
+            if(i instanceof HTMLDivElement) {
+              expect(i.innerText, 'text not rendered').contains(model.forloop);
+              expect(i.innerText.endsWith(cnt.toString()), 'leaf not rendered correctly').is.true;
+              expect(i.innerText.startsWith(model.item.values[cnt]), 'leaf not rendered correctly').is.true;
+              ++cnt;
+            }
+          }
+          expect(cnt).equals(model.item.values.length, 'failed to render only 2 leaves');
+        }
         model.item = { values: ['foo', 'bar'] };
-        await fixture.timeout(110);
-        // y.parentNode?.removeChild(y);
+        model.forloop = 'for-loop';
+        await assert_all(y);
+        model.item.values.push('stuff');
+        model.forloop = 'barrydaboom';
+        await assert_all(y);
+        model.item.values[1] = 'china';
+        model.forloop = 'timing';
+        await assert_all(y);
+        model.item.values.push(model.item.values.shift());
+        model.forloop = 'clocks';
+        await assert_all(y);
+        model.item.values.splice(1, 1);
+        await assert_all(y);
+        model.item.values.splice(0);
+        await assert_all(y);
+        y.parentNode?.removeChild(y);
       }
     }
   });
