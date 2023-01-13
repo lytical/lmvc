@@ -10,21 +10,10 @@ import { view } from './view';
 import type { Unsubscribable } from 'rxjs';
 import type { lmvc_model, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
+const leaf_pool_max_sz = 50;
+
 @view()
 export class lmvc_for implements lmvc_view {
-  /*
-  private async create_leaf(item: unknown, idx: number): Promise<lmvc_controller> {
-    const leaf_model = this.$create_model(item, idx);
-    const node = this.template.cloneNode(true);
-    return await this.$app.mount_controller(node, <lmvc_controller>{
-      $create_model() { return leaf_model; },
-      $dispose() {
-        return <any>mvc_view.invoke_dispose(...this.$view);
-      }
-    }, this);
-  }
-  */
-
   private create_model(item: unknown, idx: number): lmvc_model {
     const self = this;
     const rt = new Proxy(this.$scope!.controller.$model, {
@@ -36,6 +25,74 @@ export class lmvc_for implements lmvc_view {
       }
     });
     return rt;
+  }
+
+  private async do_render() {
+    const parent = this.$place_holder.parentElement;
+    if(parent) {
+      const model = this.$scope!.controller.$model;
+      const items = this.func!.apply(undefined, this.prop.map(x => {
+        const rt = model[x];
+        return typeof rt === 'function' ? rt.bind(model) : rt;
+      }));
+      if(items) {
+        const remove: lmvc_scope[] = [];
+        const idx_nm = this.idx_nm;
+        const item_nm = this.item_nm;
+        for(let i = 0, max = Math.max(items.length, this.leaf.length); i < max; ++i) {
+          let leaf: lmvc_scope | undefined = this.leaf[i];
+          if(i < items.length) {
+            if(!leaf) {
+              const scope = this.leaf_pool.length ?
+                this.leaf_pool.pop() :
+                await this.$scope!.app.load_scope(this.template!.cloneNode(true), this.$scope!.controller);
+              if(scope) {
+                const idx = i;
+                scope.controller = new Proxy(scope.controller, {
+                  get(target: any, property: string | symbol | number, receiver?: any) {
+                    return property !== '$model' ? Reflect.get(target, property, receiver) : new Proxy(model, {
+                      get(target: any, property: string | symbol | number, receiver?: any) {
+                        if(property === idx_nm) {
+                          return idx;
+                        }
+                        return property === item_nm ? items[idx] : Reflect.get(target, property, receiver);
+                      }
+                    });
+                  }
+                });
+                this.leaf[i] = scope;
+                parent.insertBefore(scope.node, this.$place_holder);
+              }
+            }
+          }
+          else if(leaf) {
+            remove.push(leaf);
+          }
+        }
+        for(let x of remove) {
+          if(this.leaf_pool.length < leaf_pool_max_sz) {
+            parent.removeChild(x.node);
+            x.controller = this.$scope!.controller;
+            this.leaf_pool.push(x);
+          }
+          else {
+            await x.app.destroy_scope(x);
+          }
+        }
+      }
+    }
+  }
+
+  private render(evt: lmvc_model_event[]) {
+    if((!evt.length || evt.some(x => this.prop.some(y => x.property == y || (typeof x.property === 'string' && x.property.startsWith(y))))) && this.func) {
+      if(this.governor) {
+        clearTimeout(this.governor);
+      }
+      this.governor = setTimeout(() => {
+        this.governor = undefined;
+        this.task = this.task.then(() => this.do_render(), ex => console.error(ex));
+      }, 10);
+    }
   }
 
   $dispose() {
@@ -76,8 +133,7 @@ export class lmvc_for implements lmvc_view {
         }
         if(this.item_nm && op_idx && (op_idx + 1) < value.length) {
           const op = value[op_idx].value;
-          if(op === 'in' || op === 'of') {
-            this.is_in_loop = op === 'in';
+          if(op === 'of') {
             const statement = value.slice(op_idx + 1);
             this.prop = [];
             let is_member = false;
@@ -111,22 +167,13 @@ export class lmvc_for implements lmvc_view {
               return;
             }
           }
+          else {
+            console.error('l:for missing "of" operator');
+          }
         }
       }
     }
     console.error(`l:for invalid statement "${this.$value}")".`);
-  }
-
-  private render(evt: lmvc_model_event[]) {
-    if((!evt.length || evt.some(x => this.prop.some(y => x.property == y || (typeof x.property === 'string' && x.property.startsWith(y))))) && this.func) {
-      if(this.governor) {
-        clearTimeout(this.governor);
-      }
-      this.governor = setTimeout(() => {
-        this.governor = undefined;
-        this.do_render();
-      }, 10);
-    }
   }
 
   $mount() {
@@ -139,109 +186,19 @@ export class lmvc_for implements lmvc_view {
     if(node.parentNode) {
       node.parentNode.replaceChild(this.$place_holder!, this.$scope!.node);
     }
-    this.is_eq;
-    this.is_in_loop;
     this.idx_nm;
     this.create_model;
   }
 
-  private do_render() {
-    const model = this.$scope!.controller.$model;
-    const items = this.func!.apply(undefined, this.prop.map(x => {
-      const rt = model[x];
-      return typeof rt === 'function' ? rt.bind(model) : rt;
-    }));
-    console.debug('rendering', items);
-    /*
-    if(document.body.contains(this.$place_holder!)) {
-      const update_leaf = (item: unknown, idx: number) => {
-        return this.update_leaf(item, idx);
-      }
-      let idx = 0;
-      if(this.is_in_loop) {
-        for(const item in items) {
-          await update_leaf(item, idx++);
-        }
-      }
-      else {
-        for(const item of items) {
-          await update_leaf(item, idx++);
-        }
-      }
-      let prune: lmvc_controller[] | undefined;
-      if(this.$view.length > items.length) {
-        prune = this.$view.splice(items.length);
-        const removed: Node[] = [];
-        for(const item of prune) {
-          const node = item.$place_holder?.parentNode ? item.$place_holder : item.$scope.node;
-          this.$place_holder?.parentNode?.removeChild(node);
-          removed.push(node);
-        }
-      }
-      if(prune) {
-        await mvc_view.invoke_dispose(...prune);
-        this.leaf_pool.push(...prune);
-      }
-    }
-    */
-  }
-
-  /*
-  private async set_leaf(item: unknown, idx: number): Promise<void> {
-    if(this.$view[idx]?.$scope.model[this.item_nm!] !== item) {
-      const rs = await this.create_leaf(item, idx);
-      this.$view[idx] = rs;
-      const next = this.$view[++idx];
-      if(next) {
-        next.$scope.node.parentNode?.insertBefore(rs.$scope.node, next.$scope.node);
-      }
-      else {
-        this.$place_holder?.parentNode?.insertBefore(rs.$scope.node, this.$place_holder);
-      }
-    }
-  }
-
-  private async update_leaf(item: unknown, idx: number) {
-    let leaf = this.$view[idx];
-    if(leaf === undefined) {
-      await this.set_leaf(item, idx);
-    }
-    else {
-      let leaf_item = leaf.$scope.model[this.item_nm!];
-      if(!this.is_eq(leaf_item, item)) {
-        let found = this.$view.findIndex(x => this.is_eq(item, x.$scope.model[this.item_nm!]));
-        if(found !== -1) {
-          leaf = this.$view.splice(found, 1)[0];
-          this.$view.splice(idx, 0, leaf);
-          const new_child = leaf.$place_holder?.parentNode ? leaf.$place_holder : leaf.$scope.node;
-          let next_leaf = this.$view[idx + 1];
-          const next_child = next_leaf ? (next_leaf.$place_holder?.parentNode ? next_leaf.$place_holder : next_leaf.$scope.node) : this.$place_holder;
-          if(next_child) {
-            this.$place_holder?.parentElement!.insertBefore(new_child, next_child);
-          }
-        }
-        else {
-          this.$view.splice(idx, 0, <lmvc_controller><unknown>undefined);
-          await this.set_leaf(item, idx);
-        }
-      }
-    }
-  }
-
-  leaf_pool!: lmvc_controller[];
-  $value?: string;
-  $view!: lmvc_controller[];
-  */
-
   private dispose?: Unsubscribable;
   private func?: Function;
   private governor?: number;
-  private is_eq: (l: unknown, r: unknown) => boolean = (l: unknown, r: unknown) => l === r;
-  private is_in_loop?: boolean;
   private idx_nm?: string;
   private item_nm?: string;
+  private leaf: lmvc_scope[] = [];
   private leaf_pool: lmvc_scope[] = [];
   private prop!: string[];
+  private task = Promise.resolve();
   private template?: Element;
   $place_holder = document.createComment('');
   $scope?: lmvc_scope;
