@@ -8,8 +8,9 @@ import { tokenize } from 'esprima';
 import { $model } from './model';
 import { view } from './view';
 import type { Unsubscribable } from 'rxjs';
-import type { lmvc_model_event, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_controller, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
+// warning: the following value should never be zero.
 const leaf_pool_max_sz = 50;
 
 @view()
@@ -17,7 +18,7 @@ export class lmvc_for implements lmvc_view {
   private async do_render() {
     const parent = this.$place_holder.parentElement;
     if(parent) {
-      const model = this.$scope!.controller.$model;
+      const model = this.controller!.$model;
       this.items = this.func!.apply(undefined, this.prop.map(x => {
         const rt = model[x];
         return typeof rt === 'function' ? rt.bind(model) : rt;
@@ -33,7 +34,7 @@ export class lmvc_for implements lmvc_view {
             if(!leaf) {
               const scope = this.leaf_pool.length ?
                 this.leaf_pool.pop() :
-                await this.$scope!.app.load_scope(this.template!.cloneNode(true), this.$scope!.controller);
+                await this.$scope!.app.load_scope(this.template!.cloneNode(true), this.controller!);
               if(scope) {
                 const idx = i;
                 scope.controller = new Proxy(scope.controller, {
@@ -62,7 +63,7 @@ export class lmvc_for implements lmvc_view {
           this.leaf.splice(this.leaf.indexOf(x), 1);
           if(this.leaf_pool.length < leaf_pool_max_sz) {
             parent.removeChild(x.node);
-            x.controller = this.$scope!.controller;
+            x.controller = this.controller!;
             this.leaf_pool.push(x);
           }
           else {
@@ -171,6 +172,7 @@ export class lmvc_for implements lmvc_view {
   }
 
   $ready() {
+    this.controller = this.$scope!.controller;
     const node = this.$scope!.node;
     console.assert(node.parentNode !== null, 'unexpected (for) view element has no parent');
     if(node.parentNode) {
@@ -178,6 +180,7 @@ export class lmvc_for implements lmvc_view {
     }
   }
 
+  private controller?: lmvc_controller;
   private dispose?: Unsubscribable;
   private func?: Function;
   private governor?: number;
@@ -189,7 +192,7 @@ export class lmvc_for implements lmvc_view {
   private prop!: string[];
   private task = Promise.resolve();
   private template?: Element;
-  $place_holder = document.createComment('');
+  private $place_holder = document.createComment('');
   $scope?: lmvc_scope;
   $value?: string;
 }
