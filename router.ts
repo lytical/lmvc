@@ -5,17 +5,63 @@
 */
 
 import { view } from './view';
-import type { lmvc_view } from './type';
+import type { lmvc_scope, lmvc_view } from './type';
 
 @view()
 export class lmvc_router implements lmvc_view {
   constructor() {
     this.base_url += (this.base_url.endsWith('/') ? '#' : '/#');
-  //   this.current = 0;
-  //   this.$view = [];
-  //   this.rest = [];
-  //   this.route = {};
-  //   this.skip = new Set<string>();
+    //   this.$view = [];
+    //   this.rest = [];
+    //   this.route = {};
+    //   this.skip = new Set<string>();
+  }
+
+  private do_initial_route() {
+    if(!window.location.href.startsWith(this.base_url)) {
+      window.location.replace(`${this.base_url}${this.$value}`);
+    }
+  }
+
+  $mount(): void | Promise<any> {
+    if(!this.popstate_handler) {
+      this.popstate_handler = lmvc_router.prototype.on_popstate.bind(this);
+      window.addEventListener('popstate', this.popstate_handler);
+    }
+    if(!this.place_holder.parentNode && this.$scope?.node.parentNode) {
+      this.$scope.node.parentNode.replaceChild(this.place_holder, this.$scope.node);
+      this.do_initial_route();
+    }
+  }
+
+  async $ready() {
+    const node = this.$scope!.node;
+    node.childNodes.forEach(x => {
+      if(x.nodeType === Node.ELEMENT_NODE) {
+        this.content = x;
+      }
+    });
+    if(this.content) {
+      node.removeChild(this.content);
+    }
+    else {
+      this.content = document.createElement('div');
+      (<HTMLElement>this.content).classList.add('l-router-loading');
+      (<HTMLElement>this.content).innerText = 'loading, please wait...';
+    }
+    if(node.parentNode) {
+      this.popstate_handler = lmvc_router.prototype.on_popstate.bind(this);
+      window.addEventListener('popstate', this.popstate_handler);
+      node.parentNode.replaceChild(this.place_holder, node);
+      this.do_initial_route();
+    }
+  }
+
+  $unmount(): void | Promise<any> {
+    if(this.popstate_handler) {
+      window.removeEventListener('popstate', this.popstate_handler);
+      this.popstate_handler = undefined;
+    }
   }
 
   // private async do_route(controller: lmvc_controller, module: string, cb: (view: route_page_view_ctx) => Promise<void>) {
@@ -148,7 +194,8 @@ export class lmvc_router implements lmvc_view {
   //   }
   // }
 
-  // private async on_popstate(evt: PopStateEvent,) {
+  private async on_popstate(evt: PopStateEvent) {
+    console.debug('onpopstate', evt);
   //   if(!this.is_cancelling) {
   //     if(typeof evt.state === 'number' && evt.state >= 0) {
   //       if(await this.unmount_current()) {
@@ -184,7 +231,7 @@ export class lmvc_router implements lmvc_view {
   //   else {
   //     this.is_cancelling = undefined;
   //   }
-  // }
+  }
 
   // private async push(module: string, state: push_state) {
   //   if(await this.unmount_current()) {
@@ -209,28 +256,6 @@ export class lmvc_router implements lmvc_view {
   //       }
   //     });
   //   }
-  // }
-
-  // async $ready() {
-  //   window.addEventListener('popstate', evt => this.on_popstate(evt).catch(ex => console.error(ex)));
-  //   const node = this.$node;
-  //   node.childNodes.forEach(x => {
-  //     if(x.nodeType === Node.ELEMENT_NODE) {
-  //       this.content = x;
-  //     }
-  //   });
-  //   if(this.content) {
-  //     node.removeChild(this.content);
-  //   }
-  //   else {
-  //     this.content = document.createElement('div');
-  //     (<HTMLElement>this.content).classList.add('l-router-loading');
-  //     (<HTMLElement>this.content).innerText = 'loading, please wait...';
-  //   }
-  //   node.parentNode!.replaceChild(this.$place_holder!, node);
-  //   await (window.location.href.startsWith(this.base_url) ?
-  //     this.refresh(window.location.href.slice(this.base_url.length + 1), window.history.state) :
-  //     this.replace(<string>this.$value || 'home'));
   // }
 
   // private refresh(module: string, current: number): PromiseLike<void> {
@@ -287,15 +312,18 @@ export class lmvc_router implements lmvc_view {
   //   return true;
   // }
 
-  base_url = `${window.location.origin}${requirejs.toUrl('/')}`;
-  // content!: Node;
-  // current!: number;
-  $place_holder = document.createComment('');
+  private base_url = `${window.location.origin}${requirejs.toUrl(window.location.pathname)}`;
+  private content?: Node;
+  //private current = 0;
+  private place_holder = document.createComment('');
+  //private route: lmvc_scope[] = [];
+  private popstate_handler?: (evt: PopStateEvent) => any;
   // $view!: route_page_view_ctx[];
   // is_cancelling?: true;
   // rest!: { pattern: RegExp, controller: lmvc_controller, rest: string[] }[];
   // route!: Record<string, lmvc_controller>;
   // skip!: Set<string>;
+  $scope?: lmvc_scope;
   $value?: unknown;
 }
 

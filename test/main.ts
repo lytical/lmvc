@@ -42,6 +42,7 @@ require(['mocha'], (mocha: any) => {
     'lmvc/test/if',
     'lmvc/test/on',
     'lmvc/test/prop',
+    'lmvc/test/router',
     'lmvc/test/style',
     'lmvc/test/text'
   ], () => mocha.run());

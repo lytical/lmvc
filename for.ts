@@ -16,7 +16,7 @@ const leaf_pool_max_sz = 50;
 @view()
 export class lmvc_for implements lmvc_view {
   private async do_render() {
-    const parent = this.$place_holder.parentElement;
+    const parent = this.place_holder.parentElement;
     if(parent) {
       const model = this.controller!.$model;
       this.items = this.func!.apply(undefined, this.prop.map(x => {
@@ -51,7 +51,7 @@ export class lmvc_for implements lmvc_view {
                   }
                 });
                 this.leaf[i] = scope;
-                parent.insertBefore(scope.node, this.$place_holder);
+                parent.insertBefore(scope.node, this.place_holder);
               }
             }
           }
@@ -91,8 +91,8 @@ export class lmvc_for implements lmvc_view {
       this.dispose.unsubscribe();
       this.dispose = undefined;
     }
-    if(this.$place_holder.parentElement) {
-      this.$place_holder.parentElement.removeChild(this.$place_holder);
+    if(this.place_holder.parentElement) {
+      this.place_holder.parentElement.removeChild(this.place_holder);
     }
   }
 
@@ -176,7 +176,7 @@ export class lmvc_for implements lmvc_view {
     const node = this.$scope!.node;
     console.assert(node.parentNode !== null, 'unexpected (for) view element has no parent');
     if(node.parentNode) {
-      node.parentNode.replaceChild(this.$place_holder!, this.$scope!.node);
+      node.parentNode.replaceChild(this.place_holder!, this.$scope!.node);
     }
   }
 
@@ -192,7 +192,7 @@ export class lmvc_for implements lmvc_view {
   private prop!: string[];
   private task = Promise.resolve();
   private template?: Element;
-  private $place_holder = document.createComment('');
+  private place_holder = document.createComment('');
   $scope?: lmvc_scope;
   $value?: string;
 }
