@@ -35,7 +35,7 @@ export class lmvc_test_controller implements lmvc_controller<model> {
 
   async $ready() {
     this.readyed = true;
-    this.$model.text = 'foobar this stuff';
+    this.$model.text = 'and another one';
   }
 
   async $unmount() {

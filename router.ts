@@ -5,63 +5,194 @@
 */
 
 import { view } from './view';
-import type { lmvc_scope, lmvc_view } from './type';
+import type { lmvc_controller, lmvc_router, lmvc_scope } from './type';
 
 @view()
-export class lmvc_router implements lmvc_view {
+export class lmvc_router_imp implements lmvc_router {
   constructor() {
     this.base_url += (this.base_url.endsWith('/') ? '#' : '/#');
-    //   this.$view = [];
-    //   this.rest = [];
-    //   this.route = {};
-    //   this.skip = new Set<string>();
+  }
+
+  private async unmount_current() {
+    let scope = this.route[this.current];
+    if(scope) {
+      let ctlr = <lmvc_controller>scope.view[0];
+      if(typeof ctlr.$can_leave === 'function') {
+        let rs = ctlr.$can_leave();
+        return typeof rs === 'object' && typeof rs.then === 'function' ? await rs : rs;
+      }
+      let node = scope.node;
+      console.assert(node.parentElement !== null);
+      if(node.parentElement) {
+        node.parentElement.removeChild(node);
+      }
+    }
+    return true;
   }
 
   private do_initial_route() {
-    if(!window.location.href.startsWith(this.base_url)) {
-      window.location.replace(`${this.base_url}${this.$value}`);
-    }
+    return this.replace(window.location.href.startsWith(this.base_url) ? window.location.hash.slice(1) : this.$value || '/home');
   }
 
-  $mount(): void | Promise<any> {
-    if(!this.popstate_handler) {
-      this.popstate_handler = lmvc_router.prototype.on_popstate.bind(this);
-      window.addEventListener('popstate', this.popstate_handler);
+  $init() {
+    this.$scope!.app.router = this;
+  }
+
+  private async load(path: string): Promise<lmvc_scope | undefined> {
+    for(let item of this.rest) {
+      const match = item.pattern.exec(path);
+      if(match) {
+        let rt = await this.$scope!.app.load_scope(item.node.cloneNode(true), this.$scope!.controller);
+        if(rt) {
+          rt.view[0].$arg = match.slice(1).reduce<any>((rs, x, idx) => {
+            rs[item.rest[idx]] = x.slice(1);
+            return rs;
+          }, {});
+          return rt;
+        }
+      }
     }
-    if(!this.place_holder.parentNode && this.$scope?.node.parentNode) {
-      this.$scope.node.parentNode.replaceChild(this.place_holder, this.$scope.node);
-      this.do_initial_route();
+    const segment = path.split('/');
+    for(let idx = segment.length; idx > 0; --idx) {
+      let id = segment.slice(0, idx).join(':');
+      if(!id) {
+        break;
+      }
+      if(this.skip.has(id)) {
+        continue;
+      }
+      while(true) {
+        let node = <Element>this.$scope!.node;
+        node.innerHTML = `<div *${id}></div>`;
+        node = node.firstElementChild!;
+        let scope: lmvc_scope | undefined;
+        try {
+          scope = await this.$scope!.app.load_scope(node, this.$scope!.controller);
+        }
+        catch(_) {
+          if(id.endsWith(':main')) {
+            this.skip.add(id);
+          }
+          id = id + ':main';
+          continue;
+        }
+      }
+      const md = <mvc_controller_metedata_arg | undefined>mvc_view.get_view_metadata(ctlr);
+      if(md && Array.isArray(md.rest)) {
+        let required = md.rest.findIndex(x => typeof x !== 'string' && x.is_optional);
+        if((required === -1 && md.rest.length <= (segment.length - idx)) || (required > 0 && required < (segment.length - idx))) {
+          const rest = {
+            pattern: new RegExp(`^${segment.slice(0, idx).join('\\/')}${md.rest.map((_x, i) => {
+              let rt = '(\\/[^\\/]+)';
+              return required !== -1 && i >= required ? `${rt}?` : rt;
+            })}$`),
+            rest: md.rest.map(x => typeof x === 'string' ? x : x.id),
+            controller: ctlr
+          };
+          this.rest.push(rest);
+          ctlr.$arg = segment.slice(idx).reduce<any>((rs, x, idx) => {
+            rs[rest.rest[idx]] = x;
+            return rs;
+          }, {});
+        }
+      }
+      this.route[path] = ctlr;
     }
+    await this.do_route(ctlr, module, cb);
+    return;
+    console.warn(`route (${module}) not found.`);
+    if(!dont_redirect) {
+      this.$place_holder!.parentNode!.removeChild(this.content);
+      await this.load(`${ this.$value || 'home' } /page/not - found`, cb, true);
+    }
+      
+    let id = path.slice(1).replace(/\//g, ':');
+    id = `< div * ${ id }> </div>`;
+if(this.content && !this.content.parentElement) {
+  this.place_holder.parentElement!.insertBefore(this.content, this.place_holder);
+}
+let node = <Element>this.$scope!.node;
+node.innerHTML = `<div *${id}></div>`;
+node = node.firstElementChild!;
+const scope = await this.$scope!.app.load_scope(node, this.$scope!.controller);
+
+
+this.route[++this.current] = scope;
+window.history.replaceState(this.current, '');
+this.place_holder.parentElement!.removeChild(this.content!);
+this.place_holder.parentElement!.insertBefore(scope.node, this.place_holder);
+const ctlr = <lmvc_controller | undefined>scope.view[0];
+if(ctlr && typeof ctlr.$get_title === 'function') {
+  let rs = ctlr.$get_title();
+  if(typeof rs === 'object' && typeof rs.then === 'function') {
+    rs = await rs;
+  }
+  window.document.title = <string>rs;
+}
+
+
+
+return undefined;
+  }
+  
+  async push(_path: string) {
+  return false;
+}
+
+  async replace(path: string) {
+  if(!await this.unmount_current()) {
+    return false;
+  }
+  let scope = await this.load(path);
+  if(scope) {
+
+  }
+  else {
+
+  }
+  window.location.replace(`./#${path}`);
+  return true;
+}
+
+$mount(): void | Promise < any > {
+  if(!this.popstate_handler) {
+  this.popstate_handler = lmvc_router_imp.prototype.on_popstate.bind(this);
+  window.addEventListener('popstate', this.popstate_handler);
+}
+if(!this.place_holder.parentNode && this.$scope?.node.parentNode) {
+  this.$scope.node.parentNode.replaceChild(this.place_holder, this.$scope.node);
+  this.do_initial_route();
+}
   }
 
   async $ready() {
-    const node = this.$scope!.node;
-    node.childNodes.forEach(x => {
-      if(x.nodeType === Node.ELEMENT_NODE) {
-        this.content = x;
-      }
-    });
-    if(this.content) {
-      node.removeChild(this.content);
+  const node = this.$scope!.node;
+  node.childNodes.forEach(x => {
+    if(x.nodeType === Node.ELEMENT_NODE) {
+      this.content = x;
     }
-    else {
-      this.content = document.createElement('div');
-      (<HTMLElement>this.content).classList.add('l-router-loading');
-      (<HTMLElement>this.content).innerText = 'loading, please wait...';
-    }
-    if(node.parentNode) {
-      this.popstate_handler = lmvc_router.prototype.on_popstate.bind(this);
-      window.addEventListener('popstate', this.popstate_handler);
-      node.parentNode.replaceChild(this.place_holder, node);
-      this.do_initial_route();
-    }
+  });
+  if(this.content) {
+    node.removeChild(this.content);
   }
+  else {
+    this.content = document.createElement('div');
+    (<HTMLElement>this.content).classList.add('l-router-loading');
+    (<HTMLElement>this.content).innerText = 'loading, please wait...';
+  }
+  if(node.parentNode) {
+    this.popstate_handler = lmvc_router_imp.prototype.on_popstate.bind(this);
+    window.addEventListener('popstate', this.popstate_handler);
+    node.parentNode.replaceChild(this.place_holder, node);
+    this.do_initial_route();
+  }
+}
 
-  $unmount(): void | Promise<any> {
-    if(this.popstate_handler) {
-      window.removeEventListener('popstate', this.popstate_handler);
-      this.popstate_handler = undefined;
-    }
+$unmount(): void | Promise < any > {
+  if(this.popstate_handler) {
+  window.removeEventListener('popstate', this.popstate_handler);
+  this.popstate_handler = undefined;
+}
   }
 
   // private async do_route(controller: lmvc_controller, module: string, cb: (view: route_page_view_ctx) => Promise<void>) {
@@ -194,8 +325,62 @@ export class lmvc_router implements lmvc_view {
   //   }
   // }
 
+  private async append() {
+  if(this.current !== -1) {
+    for(let scope of this.route.splice(this.current + 1)) {
+      this.$scope!.app.destroy_scope(scope);
+    }
+  }
+  this.place_holder.parentElement!.insertBefore(this.content!, this.place_holder);
+  const id = window.location.hash.slice(2).replace(/\//g, ':');
+  let node = <Element>this.$scope!.node;
+  node.innerHTML = `<div *${id}></div>`;
+  node = node.firstElementChild!;
+  const scope = await this.$scope!.app.load_scope(node, this.$scope!.controller);
+  this.route[++this.current] = scope;
+  window.history.replaceState(this.current, '');
+  this.place_holder.parentElement!.removeChild(this.content!);
+  this.place_holder.parentElement!.insertBefore(scope.node, this.place_holder);
+  const ctlr = <lmvc_controller | undefined>scope.view[0];
+  if(ctlr && typeof ctlr.$get_title === 'function') {
+    let rs = ctlr.$get_title();
+    if(typeof rs === 'object' && typeof rs.then === 'function') {
+      rs = await rs;
+    }
+    window.document.title = <string>rs;
+  }
+}
+
   private async on_popstate(evt: PopStateEvent) {
-    console.debug('onpopstate', evt);
+  await new Promise<void>(res => setTimeout(res, 0));
+  console.debug('onpopstate', evt);
+  if(this.current !== -1) {
+    let scope = this.route[this.current];
+    let ctlr = <lmvc_controller>scope.view[0];
+    if(typeof ctlr.$can_leave === 'function') {
+      let rs = ctlr.$can_leave();
+      if(typeof rs === 'object' && typeof rs.then === 'function') {
+        rs = await rs;
+      }
+      if(!rs) {
+        if(typeof evt.state !== 'number' || this.current < evt.state) {
+          window.history.back();
+        }
+        else {
+          window.history.forward();
+        }
+        return;
+      }
+    }
+    let node = scope.node;
+    node.parentElement!.removeChild(node);
+  }
+  if(typeof evt.state === 'number' && evt.state >= 0) {
+    this.current = evt.state;
+  }
+  else if(!evt.state) {
+    await this.append();
+  }
   //   if(!this.is_cancelling) {
   //     if(typeof evt.state === 'number' && evt.state >= 0) {
   //       if(await this.unmount_current()) {
@@ -231,7 +416,7 @@ export class lmvc_router implements lmvc_view {
   //   else {
   //     this.is_cancelling = undefined;
   //   }
-  }
+}
 
   // private async push(module: string, state: push_state) {
   //   if(await this.unmount_current()) {
@@ -313,18 +498,18 @@ export class lmvc_router implements lmvc_view {
   // }
 
   private base_url = `${window.location.origin}${requirejs.toUrl(window.location.pathname)}`;
-  private content?: Node;
-  //private current = 0;
+  private content ?: Node;
+  private current = -1;
   private place_holder = document.createComment('');
-  //private route: lmvc_scope[] = [];
-  private popstate_handler?: (evt: PopStateEvent) => any;
-  // $view!: route_page_view_ctx[];
-  // is_cancelling?: true;
-  // rest!: { pattern: RegExp, controller: lmvc_controller, rest: string[] }[];
-  // route!: Record<string, lmvc_controller>;
-  // skip!: Set<string>;
-  $scope?: lmvc_scope;
-  $value?: unknown;
+  private popstate_handler ?: (evt: PopStateEvent) => any;
+  private rest: { pattern: RegExp, node: HTMLDivElement, rest: string[] } [] = [];
+  private route: lmvc_scope[] = [];
+  private skip = new Set<string>();
+// $view!: route_page_view_ctx[];
+// is_cancelling?: true;
+// route!: Record<string, lmvc_controller>;
+$scope ?: lmvc_scope;
+$value ?: string;
 }
 
 // interface route_page_view_ctx extends lmvc_controller {

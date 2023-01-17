@@ -14,7 +14,7 @@ export interface lmvc_app {
   load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope[]>;
   load_scope(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope>;
   register_view(id: string, cstor: Promise<__cstor<lmvc_view>>): void;
-  controller?: lmvc_controller<any>;
+  router?: lmvc_router;
 }
 
 export interface lmvc_scope<_t_ = lmvc_model> {
@@ -86,6 +86,8 @@ export interface lmvc_view<_t_ = lmvc_model> {
 }
 
 export interface lmvc_controller<_m_ = lmvc_model, _t_ = lmvc_model> extends lmvc_view<_t_> {
+  $can_leave?(): boolean | Promise<boolean>;
+  $get_title?(): string | Promise<string>;
   $model: _m_;
   $view: lmvc_view[];
 }
@@ -129,4 +131,9 @@ export interface lmvc_model_subject extends Subscribable<lmvc_model_event[]> {
    * broadcast the provided model event(s) to all subscribers (views).
    */
   next(...msg: lmvc_model_event[]): lmvc_model_event[];
+}
+
+export interface lmvc_router extends lmvc_view {
+  push(path: string): Promise<boolean>;
+  replace(path: string): Promise<boolean>;
 }
