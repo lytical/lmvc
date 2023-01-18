@@ -96,7 +96,7 @@ export class lmvc_router_imp implements lmvc_router {
             continue;
           }
         }
-        const ctlr = <lmvc_controller>rt.view[0];
+        const ctlr = <lmvc_route_controller>rt.view[0];
         const md = <lmvc_controller_metedata_arg | undefined>$view.get_view_metadata(ctlr);
         if(md && Array.isArray(md.rest)) {
           let required = md.rest.findIndex(x => typeof x !== 'string' && x.is_optional);
@@ -162,11 +162,6 @@ export class lmvc_router_imp implements lmvc_router {
   }
 
   private async append() {
-    if(this.current !== -1) {
-      for(let scope of this.route.splice(this.current + 1)) {
-        this.$scope!.app.destroy_scope(scope);
-      }
-    }
     this.place_holder.parentElement!.insertBefore(this.content!, this.place_holder);
     const id = window.location.hash.slice(2).replace(/\//g, ':');
     let node = <Element>this.$scope!.node;
@@ -177,7 +172,7 @@ export class lmvc_router_imp implements lmvc_router {
     window.history.replaceState(this.current, '');
     this.place_holder.parentElement!.removeChild(this.content!);
     this.place_holder.parentElement!.insertBefore(scope.node, this.place_holder);
-    const ctlr = <lmvc_controller | undefined>scope.view[0];
+    const ctlr = <lmvc_route_controller | undefined>scope.view[0];
     if(ctlr && typeof ctlr.$get_title === 'function') {
       let rs = ctlr.$get_title();
       if(typeof rs === 'object' && typeof rs.then === 'function') {
@@ -192,7 +187,7 @@ export class lmvc_router_imp implements lmvc_router {
     console.debug('onpopstate', evt);
     if(this.current !== -1) {
       let scope = this.route[this.current];
-      let ctlr = <lmvc_controller>scope.view[0];
+      let ctlr = <lmvc_route_controller>scope.view[0];
       if(typeof ctlr.$can_leave === 'function') {
         let rs = ctlr.$can_leave();
         if(typeof rs === 'object' && typeof rs.then === 'function') {
@@ -254,7 +249,25 @@ export class lmvc_router_imp implements lmvc_router {
     //   }
   }
 
-  async push(_path: string) {
+  async push(path: string) {
+    await this.task;
+    if(!await this.unmount_current()) {
+      return false;
+    }
+    const app = this.$scope!.app;
+    if(this.current !== -1) {
+      for(let scope of this.route.splice(this.current + 1)) {
+        app.destroy_scope(scope);
+      }
+    }
+    let scope = await this.load(path);
+    if(scope) {
+      this.route.push(scope);
+      window.history.pushState(++this.current, '', `./#${path}`);
+      (<lmvc_route_controller>scope.view[0]).href = window.location.href;
+      this.place_holder.parentElement!.insertBefore(scope.node, this.place_holder);
+      return true;
+    }
     return false;
   }
 
@@ -278,6 +291,7 @@ export class lmvc_router_imp implements lmvc_router {
         this.route[this.current] = scope;
       }
       window.history.replaceState(0, '', `./#${path}`);
+      (<lmvc_route_controller>scope.view[0]).href = window.location.href;
       this.place_holder.parentElement!.insertBefore(scope.node, this.place_holder);
       return true;
     }
@@ -287,7 +301,7 @@ export class lmvc_router_imp implements lmvc_router {
   private async unmount_current() {
     let scope = this.route[this.current];
     if(scope) {
-      let ctlr = <lmvc_controller>scope.view[0];
+      let ctlr = <lmvc_route_controller>scope.view[0];
       if(typeof ctlr.$can_leave === 'function') {
         let rs = ctlr.$can_leave();
         if(!(typeof rs === 'object' && typeof rs.then === 'function' ? await rs : rs)) {
@@ -550,9 +564,9 @@ export class lmvc_router_imp implements lmvc_router {
   $value?: string;
 }
 
-// interface route_page_view_ctx extends lmvc_controller {
-//   href?: string;
-// }
+interface lmvc_route_controller extends lmvc_controller {
+  href?: string;
+}
 
 // enum push_state {
 //   dont,
