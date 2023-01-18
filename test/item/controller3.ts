@@ -8,9 +8,9 @@ import { controller } from '../../controller';
 import { lmvc_test_controller } from './controller';
 
 @controller({ html: 'lmvc/test/item/controller.html' })
-export class lmvc_test_controller2 extends lmvc_test_controller {
+export class lmvc_test_controller3 extends lmvc_test_controller {
   async $ready() {
     await super.$ready();
-    this.$model.text = 'and another one';
+    this.$model.text = 'yeah baby!';
   }
 }

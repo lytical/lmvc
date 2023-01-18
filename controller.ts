@@ -5,11 +5,11 @@
 */
 
 import { $view, view } from './view';
-import type { lmvc_controller } from './type';
+import type { lmvc_controller_metedata_arg } from './type';
 
 export class $controller {
   static async get_controller_html(arg: any) {
-    const md = <mvc_controller_metedata_arg | undefined>$view.get_view_metadata(arg);
+    const md = <lmvc_controller_metedata_arg | undefined>$view.get_view_metadata(arg);
     let rs = typeof md?.html === 'function' ? md.html(arg) : md?.html;
     while(rs) {
       if(Array.isArray(rs)) {
@@ -26,7 +26,7 @@ export class $controller {
   }
 
   static is_controller(arg: any) {
-    return (<mvc_controller_metedata_arg | undefined>$view.get_view_metadata(arg))?.html !== undefined;
+    return (<lmvc_controller_metedata_arg | undefined>$view.get_view_metadata(arg))?.html !== undefined;
   }
 
   static async load_html(url: string): Promise<Node[]> {
@@ -74,15 +74,7 @@ export class $controller {
   }
 }
 
-export interface mvc_view_metadata_arg {
-}
-
-export interface mvc_controller_metedata_arg extends mvc_view_metadata_arg {
-  html: string | null | Node[] | Promise<Node[]> | ((ctx: lmvc_controller) => Node[] | string | null | Promise<Node[] | string | null>);
-  rest?: (string | { id: string, is_optional?: true })[];
-}
-
-export function controller(args: mvc_controller_metedata_arg = { html: null }) {
+export function controller(args: lmvc_controller_metedata_arg = { html: null }) {
   if(typeof args.html === 'string') {
     args.html = $controller.load_html(args.html);
   }

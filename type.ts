@@ -137,3 +137,11 @@ export interface lmvc_router extends lmvc_view {
   push(path: string): Promise<boolean>;
   replace(path: string): Promise<boolean>;
 }
+
+export interface lmvc_view_metadata_arg {
+}
+
+export interface lmvc_controller_metedata_arg extends lmvc_view_metadata_arg {
+  html: string | null | Node[] | Promise<Node[]> | ((ctx: lmvc_controller) => Node[] | string | null | Promise<Node[] | string | null>);
+  rest?: (string | { id: string, is_optional?: true })[];
+}

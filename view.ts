@@ -5,7 +5,7 @@
 */
 
 import type { __cstor } from 'common/plain-object';
-import type { lmvc_view } from './type';
+import type { lmvc_view, lmvc_view_metadata_arg } from './type';
 
 const mvc_view_metadata: unique symbol = Symbol('l-mvc-view-metadata');
 
@@ -13,9 +13,9 @@ export class $view {
   static get_view_metadata(value: any) {
     switch(typeof value) {
       case 'object':
-        return Object.getPrototypeOf(value)[mvc_view_metadata];
+        return <lmvc_view_metadata_arg>Object.getPrototypeOf(value)[mvc_view_metadata];
       case 'function':
-        return value[mvc_view_metadata];
+        return <lmvc_view_metadata_arg>value[mvc_view_metadata];
     }
     return undefined;
   }
@@ -43,9 +43,6 @@ export class $view {
     }
     throw new Error(`not-found: ${id}`);
   }
-}
-
-export interface lmvc_view_metadata_arg {
 }
 
 export function view(args: lmvc_view_metadata_arg = {}) {

@@ -8,7 +8,7 @@ import { $view } from './view';
 import { $controller } from './controller';
 import { $model } from './model';
 import type { __cstor } from 'common/plain-object';
-import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_router, lmvc_scope, lmvc_view } from './type';
 
 const view_attr_pattern = /\*?\w[\w\-]*(:\w[\w\-]*){1,}/;
 
@@ -288,6 +288,7 @@ export class lmvc_app implements lmvc_app_t {
 
   controller?: lmvc_controller<any>;
   private observer?: MutationObserver;
+  router?: lmvc_router;
   private scope: lmvc_scope[] = [];
   private readonly view: Record<string, Promise<__cstor<lmvc_view>>> = {};
 }
