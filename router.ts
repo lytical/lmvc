@@ -89,10 +89,10 @@ export class lmvc_router_imp implements lmvc_router {
             rt = await this.$scope!.app.load_scope(node.cloneNode(), this.$scope!.controller);
           }
           catch(ex2) {
+            this.skip.add(id);
             if(!lmvc_router_imp.is_not_found_exception(ex2)) {
               return undefined;
             }
-            this.skip.add(id);
             continue;
           }
         }
@@ -208,6 +208,7 @@ export class lmvc_router_imp implements lmvc_router {
     }
     if(typeof evt.state === 'number' && evt.state >= 0) {
       this.current = evt.state;
+      this.place_holder.parentElement!.insertBefore(this.route[this.current].node, this.place_holder);
     }
     else if(!evt.state) {
       await this.append();
