@@ -44,7 +44,7 @@ export class lmvc_for implements lmvc_view {
                         if(property === idx_nm) {
                           return idx;
                         }
-                        const items = self.items || [];
+                        const items = self.op_is_in === true ? Object.keys(self.items || {}) : self.items || [];
                         return property === item_nm ? items[idx] : Reflect.get(target, property, receiver);
                       }
                     });
@@ -123,8 +123,15 @@ export class lmvc_for implements lmvc_view {
           op_idx = 1;
         }
         if(this.item_nm && op_idx && (op_idx + 1) < value.length) {
-          const op = value[op_idx].value;
-          if(op === 'of') {
+          switch(value[op_idx].value) {
+            case 'of':
+              this.op_is_in = false;
+              break;
+            case 'in':
+              this.op_is_in = true;
+              break;
+          }
+          if(this.op_is_in !== undefined) {
             const statement = value.slice(op_idx + 1);
             this.prop = [];
             let is_member = false;
@@ -159,7 +166,7 @@ export class lmvc_for implements lmvc_view {
             }
           }
           else {
-            console.error('l:for missing "of" operator');
+            console.error('l:for missing "of" or "in" operator');
           }
         }
       }
@@ -189,6 +196,7 @@ export class lmvc_for implements lmvc_view {
   private items?: unknown[];
   private leaf: lmvc_scope[] = [];
   private leaf_pool: lmvc_scope[] = [];
+  private op_is_in?: boolean;
   private prop!: string[];
   private task = Promise.resolve();
   private template?: Element;
