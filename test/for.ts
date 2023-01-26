@@ -92,7 +92,7 @@ describe('l:for view', () => {
           }
           expect(cnt).equals(key.length, 'failed to render all leaves');
         }
-        model.item = { foo: 123, bar: 321 };
+        model.item = { values: { oof: 123, rab: 321 } };
         model.forloop = 'for-loop-in';
         await assert_all(y);
         // model.item.values.push('stuff');
