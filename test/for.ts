@@ -15,11 +15,11 @@ fixture.after_bootstrap(ctlr => {
 });
 
 describe('l:for view', () => {
-  it('can render elements via the $model', async () => {
+  it('can render array elements via the $model', async () => {
     expect(test_app, 'failed to allocate app.').is.not.undefined;
     expect(model, 'failed to bootstrap app.').is.not.undefined;
     if(test_app) {
-      let y = window.document.querySelector('#test-for');
+      let y = window.document.querySelector('#test-for-of');
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
         expect(y.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(1);
@@ -27,12 +27,12 @@ describe('l:for view', () => {
           const i = y.childNodes.item(x);
           expect(i instanceof Comment || i instanceof Text, 'unexpected rendered element').is.true;
         }
-        const assert_all = async (y: Element) => {
+        const assert_all = async (z: Element) => {
           await fixture.timeout(20);
-          expect(y.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(model.item.values.length);
+          expect(z.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(model.item.values.length);
           let cnt = 0;
-          for(let x = 0; x < y.childNodes.length; ++x) {
-            const i = y.childNodes.item(x);
+          for(let x = 0; x < z.childNodes.length; ++x) {
+            const i = z.childNodes.item(x);
             expect(i instanceof Comment || i instanceof Text || i instanceof HTMLDivElement, 'unexpected rendered element').is.true;
             if(i instanceof HTMLDivElement) {
               expect(i.innerText, 'text not rendered').contains(model.forloop);
@@ -41,10 +41,10 @@ describe('l:for view', () => {
               ++cnt;
             }
           }
-          expect(cnt).equals(model.item.values.length, 'failed to render only 2 leaves');
+          expect(cnt).equals(model.item.values.length, 'failed to render all leaves');
         }
         model.item = { values: ['foo', 'bar'] };
-        model.forloop = 'for-loop';
+        model.forloop = 'for-loop-of';
         await assert_all(y);
         model.item.values.push('stuff');
         model.forloop = 'barrydaboom';
@@ -59,7 +59,56 @@ describe('l:for view', () => {
         await assert_all(y);
         model.item.values.splice(0);
         await assert_all(y);
-        y.parentNode?.removeChild(y);
+        y?.parentNode?.removeChild(y!);
+      }
+    }
+  });
+  it('can render object fields via the $model', async () => {
+    expect(test_app, 'failed to allocate app.').is.not.undefined;
+    expect(model, 'failed to bootstrap app.').is.not.undefined;
+    if(test_app) {
+      let y = window.document.querySelector('#test-for-in');
+      expect(y, 'the test element is not in the dom.').is.not.null;
+      if(y) {
+        expect(y.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(1);
+        for(let x = 0; x < y.childNodes.length; ++x) {
+          const i = y.childNodes.item(x);
+          expect(i instanceof Comment || i instanceof Text, 'unexpected rendered element').is.true;
+        }
+        const assert_all = async (z: Element) => {
+          await fixture.timeout(20);
+          const key = Object.keys(model.item);
+          expect(z.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(key.length);
+          let cnt = 0;
+          for(let x = 0; x < z.childNodes.length; ++x) {
+            const i = z.childNodes.item(x);
+            expect(i instanceof Comment || i instanceof Text || i instanceof HTMLDivElement, 'unexpected rendered element').is.true;
+            if(i instanceof HTMLDivElement) {
+              expect(i.innerText, 'text not rendered').contains(model.forloop);
+              expect(i.innerText.endsWith(cnt.toString()), 'leaf not rendered correctly').is.true;
+              expect(i.innerText.startsWith(key[cnt]), 'leaf not rendered correctly').is.true;
+              ++cnt;
+            }
+          }
+          expect(cnt).equals(key.length, 'failed to render all leaves');
+        }
+        model.item = { foo: 123, bar: 321 };
+        model.forloop = 'for-loop-in';
+        await assert_all(y);
+        // model.item.values.push('stuff');
+        // model.forloop = 'barrydaboom';
+        // await assert_all(y);
+        // model.item.values[1] = 'china';
+        // model.forloop = 'timing';
+        // await assert_all(y);
+        // model.item.values.push(model.item.values.shift());
+        // model.forloop = 'clocks';
+        // await assert_all(y);
+        // model.item.values.splice(1, 1);
+        // await assert_all(y);
+        // model.item.values.splice(0);
+        // await assert_all(y);
+        // y?.parentNode?.removeChild(y!);
       }
     }
   });
