@@ -19,18 +19,19 @@ export class lmvc_for implements lmvc_view {
     const parent = this.place_holder.parentElement;
     if(parent) {
       const model = this.controller!.$model;
-      this.items = this.func!.apply(undefined, this.prop.map(x => {
+      const item: unknown[] = this.func!.apply(undefined, this.prop.map(x => {
         const rt = model[x];
         return typeof rt === 'function' ? rt.bind(model) : rt;
       }));
-      if(this.items) {
+      console.debug({ prop: this.prop, item, model });
+      if(item) {
+        const items = this.op_is_in === true ? Object.keys(item || {}) : item || [];
         const remove: lmvc_scope[] = [];
         const idx_nm = this.idx_nm;
         const item_nm = this.item_nm;
-        const self = this;
-        for(let i = 0, max = Math.max(this.items.length, this.leaf.length); i < max; ++i) {
+        for(let i = 0, max = Math.max(item.length, this.leaf.length); i < max; ++i) {
           let leaf: lmvc_scope | undefined = this.leaf[i];
-          if(i < this.items.length) {
+          if(i < item.length) {
             if(!leaf) {
               const scope = this.leaf_pool.length ?
                 this.leaf_pool.pop() :
@@ -44,7 +45,6 @@ export class lmvc_for implements lmvc_view {
                         if(property === idx_nm) {
                           return idx;
                         }
-                        const items = self.op_is_in === true ? Object.keys(self.items || {}) : self.items || [];
                         return property === item_nm ? items[idx] : Reflect.get(target, property, receiver);
                       }
                     });
@@ -193,7 +193,6 @@ export class lmvc_for implements lmvc_view {
   private governor?: number;
   private idx_nm?: string;
   private item_nm?: string;
-  private items?: unknown[];
   private leaf: lmvc_scope[] = [];
   private leaf_pool: lmvc_scope[] = [];
   private op_is_in?: boolean;
