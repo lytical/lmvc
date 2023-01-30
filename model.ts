@@ -86,7 +86,38 @@ export class $model {
       }
     };
     let proxy: ProxyConstructor;
+    const notify = (target: any, property: string | symbol | number, prev: unknown, value: unknown) => {
+      const evt: lmvc_model_event = {
+        property: typeof property !== 'symbol' ? `${prefix}${property}` : property,
+        model: proxy,
+        prev,
+        value
+      };
+      const queue = view.next(evt);
+      if(typeof property === 'string' && map[property]) {
+        queue.push(...(<string[]>map[property]).map(x => <lmvc_model_event>{
+          property: x,
+          model: proxy,
+          prev: undefined,
+          value: target[x]
+        }));
+      }
+    }
+
     proxy = new Proxy(<any>data, {
+      deleteProperty(target: any, property: string | symbol | number) {
+        if(property === is_proxy_metadata || property === $mvc_model_subject) {
+          return false;
+        }
+        const prev = Reflect.get(target, property);
+        const rt = Reflect.deleteProperty(target, property);
+        console.debug({target,property,rt});
+        if(rt) {
+          notify(target, property, prev, undefined);
+        }
+        return rt;
+      },
+
       get(target: any, property: string | symbol | number, receiver?: any): any {
         if(property === is_proxy_metadata) {
           return true;
@@ -109,21 +140,7 @@ export class $model {
         }
         let rt = Reflect.set(target, property, value, receiver);
         if(rt) {
-          const evt: lmvc_model_event = {
-            property: typeof property !== 'symbol' ? `${prefix}${property}` : property,
-            model: proxy,
-            prev,
-            value
-          };
-          const queue = view.next(evt);
-          if(typeof property === 'string' && map[property]) {
-            queue.push(...(<string[]>map[property]).map(x => <lmvc_model_event>{
-              property: x,
-              model: proxy,
-              prev: undefined,
-              value: target[x]
-            }));
-          }
+          notify(target, property, prev, value);
         }
         return rt;
       }

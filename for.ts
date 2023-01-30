@@ -23,36 +23,39 @@ export class lmvc_for implements lmvc_view {
         const rt = model[x];
         return typeof rt === 'function' ? rt.bind(model) : rt;
       }));
-      console.debug({ prop: this.prop, item, model });
       if(item) {
         const items = this.op_is_in === true ? Object.keys(item || {}) : item || [];
-        const remove: lmvc_scope[] = [];
+        const remove: leaf_scope[] = [];
         const idx_nm = this.idx_nm;
         const item_nm = this.item_nm;
-        for(let i = 0, max = Math.max(item.length, this.leaf.length); i < max; ++i) {
-          let leaf: lmvc_scope | undefined = this.leaf[i];
-          if(i < item.length) {
+        for(let i = 0, max = Math.max(items.length, this.leaf.length); i < max; ++i) {
+          let leaf: leaf_scope | undefined = this.leaf[i];
+          if(i < items.length) {
             if(!leaf) {
-              const scope = this.leaf_pool.length ?
+              leaf = <leaf_scope|undefined>(this.leaf_pool.length ?
                 this.leaf_pool.pop() :
-                await this.$scope!.app.load_scope(this.template!.cloneNode(true), this.controller!);
-              if(scope) {
+                await this.$scope!.app.load_scope(this.template!.cloneNode(true), this.controller!));
+              if(leaf) {
+                leaf.items = items;
                 const idx = i;
-                scope.controller = new Proxy(scope.controller, {
+                leaf.controller = new Proxy(leaf.controller, {
                   get(target: any, property: string | symbol | number, receiver?: any) {
                     return property !== '$model' ? Reflect.get(target, property, receiver) : new Proxy(model, {
                       get(target: any, property: string | symbol | number, receiver?: any) {
                         if(property === idx_nm) {
                           return idx;
                         }
-                        return property === item_nm ? items[idx] : Reflect.get(target, property, receiver);
+                        return property === item_nm ? leaf!.items[idx] : Reflect.get(target, property, receiver);
                       }
                     });
                   }
                 });
-                this.leaf[i] = scope;
-                parent.insertBefore(scope.node, this.place_holder);
+                this.leaf[i] = leaf;
+                parent.insertBefore(leaf.node, this.place_holder);
               }
+            }
+            else {
+              leaf.items = items;
             }
           }
           else if(leaf) {
@@ -193,7 +196,7 @@ export class lmvc_for implements lmvc_view {
   private governor?: number;
   private idx_nm?: string;
   private item_nm?: string;
-  private leaf: lmvc_scope[] = [];
+  private leaf: leaf_scope[] = [];
   private leaf_pool: lmvc_scope[] = [];
   private op_is_in?: boolean;
   private prop!: string[];
@@ -202,4 +205,8 @@ export class lmvc_for implements lmvc_view {
   private place_holder = document.createComment('');
   $scope?: lmvc_scope;
   $value?: string;
+}
+
+interface leaf_scope extends lmvc_scope {
+  items: unknown[];
 }
