@@ -28,7 +28,7 @@ describe('l:text view', () => {
         model.text = 'barfoo';
         await fixture.timeout(1);
         expect(y.textContent).equals('barfoo');
-        y.parentNode?.removeChild(y);
+        test_app.destroy_node(y);
       }
     }
   });

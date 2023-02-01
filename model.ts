@@ -111,7 +111,6 @@ export class $model {
         }
         const prev = Reflect.get(target, property);
         const rt = Reflect.deleteProperty(target, property);
-        console.debug({target,property,rt});
         if(rt) {
           notify(target, property, prev, undefined);
         }

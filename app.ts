@@ -48,6 +48,13 @@ export class lmvc_app implements lmvc_app_t {
     return rt;
   }
 
+  async destroy_node(node: Node) {
+    await Promise.all(this.find_all_scopes(node).map(x => this.destroy_scope(x)));
+    if(node.parentElement) {
+      node.parentElement.removeChild(node);
+    }
+  }
+
   async destroy_scope(scope: lmvc_scope) {
     const ls = this.get_scope_self_and_descendant(scope);
     if(ls.length) {
@@ -65,6 +72,16 @@ export class lmvc_app implements lmvc_app_t {
       }
       await Promise.all(task);
     }
+  }
+
+  find_all_scopes(node: Node) {
+    const rt: lmvc_scope[] = [];
+    for(let scope of this.scope) {
+      if(node.contains(scope.node)) {
+        rt.push(scope);
+      }
+    }
+    return rt;
   }
 
   find_scope(node: Node) {

@@ -9,8 +9,10 @@ import type { Subscribable } from 'rxjs';
 
 export interface lmvc_app {
   create_view_instance(id: string): Promise<lmvc_view>;
+  destroy_node(node: Node): Promise<void>;
   destroy_scope(scope: lmvc_scope): Promise<void>;
-  find_scope(node: Node): lmvc_scope[] | undefined;
+  find_all_scopes(node: Node): lmvc_scope[];
+  find_scope(node: Node): lmvc_scope[];
   load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope[]>;
   load_scope(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope>;
   register_view(id: string, cstor: Promise<__cstor<lmvc_view>>): void;

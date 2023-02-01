@@ -53,7 +53,7 @@ describe('l:router view', () => {
           await fixture.timeout(10);
           expect(++cnt, 'retries expired testing routing').lessThan(10);
         }
-        //y.parentNode?.removeChild(y);
+        test_app.destroy_node(y);
       }
     }
   });

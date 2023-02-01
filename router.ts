@@ -318,6 +318,12 @@ export class lmvc_router_imp implements lmvc_router {
     return true;
   }
 
+  $dispose() {
+    if(this.place_holder.parentElement) {
+      this.place_holder.parentElement.removeChild(this.place_holder);
+    }
+  }
+
   $init() {
     this.$scope!.app.router = this;
   }
