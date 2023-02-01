@@ -192,7 +192,7 @@ export class lmvc_for implements lmvc_view {
     }
   }
 
-  private controller?: lmvc_controller;
+  private controller?: lmvc_controller; // need a non-proxy instance of the controller.
   private dispose?: Unsubscribable;
   private func?: Function;
   private governor?: number;
