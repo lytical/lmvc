@@ -8,14 +8,54 @@ import type { __cstor } from 'common/plain-object';
 import type { Subscribable } from 'rxjs';
 
 export interface lmvc_app {
+  /**
+   * @description create an instance of the view specified
+   * @param id the identifier of the view.
+   */
   create_view_instance(id: string): Promise<lmvc_view>;
+  /**
+   * @description destroys the specified node by removing the node and disposing all scopes from it and the its descendants.
+   * @param node the node to destroy.
+   */
   destroy_node(node: Node): Promise<void>;
+  /**
+   * @description destoy the specified scope by removing the associated node and disposing 
+   * @param scope
+   */
   destroy_scope(scope: lmvc_scope): Promise<void>;
+  /**
+   * 
+   * @param node 
+   */
   find_all_scopes(node: Node): lmvc_scope[];
+  /**
+   * 
+   * @param node 
+   */
   find_scope(node: Node): lmvc_scope[];
+  /**
+   * 
+   * @param node 
+   * @param controller 
+   * @param views 
+   */
   load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope[]>;
+  /**
+   * 
+   * @param node 
+   * @param controller 
+   * @param views 
+   */
   load_scope(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope>;
+  /**
+   * 
+   * @param id 
+   * @param cstor 
+   */
   register_view(id: string, cstor: Promise<__cstor<lmvc_view>>): void;
+  /**
+   * 
+   */
   router?: lmvc_router;
 }
 
