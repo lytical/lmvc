@@ -15,21 +15,12 @@ const is_proxy_metadata: unique symbol = Symbol('l-mvc-is-proxy-metadata');
 /**
  * accessor to view related methods.
  */
-const $mvc_model_subject: unique symbol = Symbol('mvc-model-subject');
+const $mvc_model_subject: unique symbol = Symbol('l-mvc-model-subject');
 
 /**
- * 
+ * utility static class providing model related methods.
  */
-
 export class $model {
-  static is_model(value: any) {
-    return value && typeof value === 'object' && value[is_proxy_metadata] === true;
-  }
-
-  static make_model<_t_ = any>(value: _t_ = <any>{}): _t_ {
-    return $model.is_model(value) ? value : $model.create_model<_t_>(value, new Subject<lmvc_model_event[]>());
-  }
-
   private static create_model<_t_>(data: _t_, subject: Subject<lmvc_model_event[] & { timeout?: number; }>, prefix: string = ''): _t_ {
     const map: Record<string, string[] | Set<string>> = {};
     for(let obj = data; obj; obj = Object.getPrototypeOf(obj)) {
@@ -58,12 +49,8 @@ export class $model {
       map[x] = Array.from(map[x]);
     }
     const view = <lmvc_model_subject & { subject: Subject<lmvc_model_event[]> }>{
-      get_underlying: function() {
+      get_underlying() {
         return data;
-      },
-      subject,
-      subscribe: function() {
-        return subject.subscribe(arguments[0]);
       },
       next(...msg: lmvc_model_event[]) {
         let queue: lmvc_model_event[] & { timeout?: number; };
@@ -71,7 +58,6 @@ export class $model {
           queue = governor.get(subject)!;
           queue.push(...msg);
           clearTimeout(queue.timeout);
-          queue.timeout = undefined;
         }
         else {
           queue = msg;
@@ -83,6 +69,10 @@ export class $model {
           subject.next(msg);
         });
         return queue;
+      },
+      subject,
+      subscribe() {
+        return subject.subscribe(arguments[0]);
       }
     };
     let proxy: ProxyConstructor;
@@ -154,5 +144,13 @@ export class $model {
   static get_underlying<_t_ = unknown>(model?: object) {
     const rt = $model.get_subject(model);
     return <_t_>(rt?.get_underlying() || model);
+  }
+
+  static is_model(value: any) {
+    return value && typeof value === 'object' && value[is_proxy_metadata] === true;
+  }
+
+  static make_model<_t_ = any>(value: _t_ = <any>{}): _t_ {
+    return $model.is_model(value) ? value : $model.create_model<_t_>(value, new Subject<lmvc_model_event[]>());
   }
 }
