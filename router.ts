@@ -13,154 +13,6 @@ export class lmvc_router_imp implements lmvc_router {
     this.base_url += (this.base_url.endsWith('/') ? '#' : '/#');
   }
 
-  private create_node(id: string) {
-    let node = <Element>this.$scope!.node;
-    node.innerHTML = `<div *${id}></div>`;
-    return <HTMLDivElement>node.firstElementChild!;
-  }
-
-  private do_initial_route() {
-    return this.replace(window.location.href.startsWith(this.base_url) ? window.location.hash.slice(1) : this.$value || '/home');
-  }
-
-  private static is_not_found_exception(ex: any) {
-    if(ex.message === 'cancelled') {
-      return false;
-    }
-    if(typeof ex.redirect === 'string') {
-      setTimeout(() => window.location.href = ex.redirect);
-      return false;
-    }
-    if(typeof ex.replace === 'string') {
-      setTimeout(() => window.location.replace(ex.replace));
-      return false;
-    }
-    if(ex.status === 401) { // unauthorized
-      const auth: string | null = ex.getResponseHeader('www-authenticate');
-      if(auth) {
-        const match = /^OAuth realm="([^"]+)"$/.exec(auth);
-        if(match?.length === 2) {
-          setTimeout(() => window.location.replace(match[1]));
-          return false;
-        }
-      }
-      setTimeout(() => window.location.replace('/#/not-authorized'));
-      return false;
-    }
-    return true;
-  }
-
-  private async load(path: string): Promise<lmvc_scope | undefined> {
-    this.place_holder.parentElement?.insertBefore(this.content!, this.place_holder);
-    try {
-      for(let item of this.rest) {
-        const match = item.pattern.exec(path);
-        if(match) {
-          let rt = await this.$scope!.app.load_scope(item.node.cloneNode(true), this.$scope!.controller);
-          if(rt) {
-            rt.view[0].$arg = match.slice(1).reduce<any>((rs, x, idx) => {
-              rs[item.rest[idx]] = x.slice(1);
-              return rs;
-            }, {});
-            return rt;
-          }
-        }
-      }
-      const segment = path.slice(1).split('/');
-      for(let idx = segment.length; idx > 0; --idx) {
-        let id = segment.slice(0, idx).join(':');
-        if(!id) {
-          break;
-        }
-        if(this.skip.has(id)) {
-          continue;
-        }
-        let rt: lmvc_scope | undefined;
-        let node = this.create_node(id);
-        try {
-          rt = await this.$scope!.app.load_scope(node.cloneNode(), this.$scope!.controller);
-        }
-        catch(ex) {
-          if(!lmvc_router_imp.is_not_found_exception(ex)) {
-            return undefined;
-          }
-          try {
-            node = this.create_node(id + ':main');
-            rt = await this.$scope!.app.load_scope(node.cloneNode(), this.$scope!.controller);
-          }
-          catch(ex2) {
-            this.skip.add(id);
-            if(!lmvc_router_imp.is_not_found_exception(ex2)) {
-              return undefined;
-            }
-            continue;
-          }
-        }
-        const ctlr = <lmvc_route_controller>rt.view[0];
-        const md = <lmvc_controller_metedata_arg | undefined>$view.get_view_metadata(ctlr);
-        if(md && Array.isArray(md.rest)) {
-          let required = md.rest.findIndex(x => typeof x !== 'string' && x.is_optional);
-          if((required === -1 && md.rest.length <= (segment.length - idx)) || (required > 0 && required < (segment.length - idx))) {
-            const rest = {
-              pattern: new RegExp(`^${segment.slice(0, idx).join('\\/')}${md.rest.map((_x, i) => {
-                let rt = '(\\/[^\\/]+)';
-                return required !== -1 && i >= required ? `${rt}?` : rt;
-              })}$`),
-              rest: md.rest.map(x => typeof x === 'string' ? x : x.id),
-              node
-            };
-            this.rest.push(rest);
-            ctlr.$arg = segment.slice(idx).reduce<any>((rs, x, idx) => {
-              rs[rest.rest[idx]] = x;
-              return rs;
-            }, {});
-          }
-        }
-        if(ctlr && typeof ctlr.$get_title === 'function') {
-          let rs = ctlr.$get_title();
-          if(typeof rs === 'object' && typeof rs.then === 'function') {
-            rs = await rs;
-          }
-          window.document.title = <string>rs;
-        }
-        return rt;
-      }
-      return undefined;
-    }
-    finally {
-      this.place_holder.parentElement!.removeChild(this.content!);
-    }
-    /*
-    await this.do_route(ctlr, module, cb);
-    return;
-    console.warn(`route (${module}) not found.`);
-    if(!dont_redirect) {
-      this.$place_holder!.parentNode!.removeChild(this.content);
-      await this.load(`${this.$value || 'home'} /page/not - found`, cb, true);
-    }
-
-    let id = path.slice(1).replace(/\//g, ':');
-    id = `< div * ${id}> </div>`;
-    if(this.content && !this.content.parentElement) {
-      this.place_holder.parentElement!.insertBefore(this.content, this.place_holder);
-    }
-    let node = <Element>this.$scope!.node;
-    node.innerHTML = `<div *${id}></div>`;
-    node = node.firstElementChild!;
-    const scope = await this.$scope!.app.load_scope(node, this.$scope!.controller);
-
-
-    this.route[++this.current] = scope;
-    window.history.replaceState(this.current, '');
-    this.place_holder.parentElement!.removeChild(this.content!);
-    this.place_holder.parentElement!.insertBefore(scope.node, this.place_holder);
-
-
-
-    return undefined;
-    */
-  }
-
   private async append() {
     this.place_holder.parentElement!.insertBefore(this.content!, this.place_holder);
     const id = window.location.hash.slice(2).replace(/\//g, ':');
@@ -180,6 +32,16 @@ export class lmvc_router_imp implements lmvc_router {
       }
       window.document.title = <string>rs;
     }
+  }
+
+  private create_node(id: string) {
+    let node = <Element>this.$scope!.node;
+    node.innerHTML = `<div *${id}></div>`;
+    return <HTMLDivElement>node.firstElementChild!;
+  }
+
+  private do_initial_route() {
+    return this.replace(window.location.href.startsWith(this.base_url) ? window.location.hash.slice(1) : this.$value || '/home');
   }
 
   private async handle_popstate(evt: PopStateEvent) {
@@ -248,6 +110,121 @@ export class lmvc_router_imp implements lmvc_router {
     //   else {
     //     this.is_cancelling = undefined;
     //   }
+  }
+
+  private static is_not_found_exception(ex: any) {
+    if(ex.message === 'cancelled') {
+      return false;
+    }
+    if(typeof ex.redirect === 'string') {
+      setTimeout(() => window.location.href = ex.redirect);
+      return false;
+    }
+    if(typeof ex.replace === 'string') {
+      setTimeout(() => window.location.replace(ex.replace));
+      return false;
+    }
+    if(ex.status === 401) { // unauthorized
+      const auth: string | null = ex.getResponseHeader('www-authenticate');
+      if(auth) {
+        const match = /^OAuth realm="([^"]+)"$/.exec(auth);
+        if(match?.length === 2) {
+          setTimeout(() => window.location.replace(match[1]));
+          return false;
+        }
+      }
+      setTimeout(() => window.location.replace('/#/not-authorized'));
+      return false;
+    }
+    return true;
+  }
+
+  private async load(path: string): Promise<lmvc_scope | undefined> {
+    this.place_holder.parentElement?.insertBefore(this.content!, this.place_holder);
+    try {
+      for(let item of this.rest) {
+        const match = item.pattern.exec(path);
+        if(match) {
+          let rt = await this.$scope!.app.load_scope(item.node.cloneNode(true), this.$scope!.controller);
+          if(rt) {
+            rt.view[0].$arg = match.slice(1).reduce<any>((rs, x, idx) => {
+              rs[item.rest[idx]] = x.slice(1);
+              return rs;
+            }, {});
+            return rt;
+          }
+        }
+      }
+      const segment = path.slice(1).split('/');
+      for(let idx = segment.length; idx > 0; --idx) {
+        let id = segment.slice(0, idx).join(':');
+        if(!id) {
+          break;
+        }
+        if(this.skip.has(id)) {
+          continue;
+        }
+        let rt: lmvc_scope | undefined;
+        let node = this.create_node(id);
+        try {
+          rt = await this.$scope!.app.load_scope(node.cloneNode(), this.$scope!.controller);
+          if(rt.view.length === 0) {
+            throw new Error('not-found');
+          }
+        }
+        catch(ex) {
+          if(!lmvc_router_imp.is_not_found_exception(ex)) {
+            return undefined;
+          }
+          try {
+            node = this.create_node(id + ':main');
+            rt = await this.$scope!.app.load_scope(node.cloneNode(), this.$scope!.controller);
+            if(rt.view.length === 0) {
+              throw new Error('not-found');
+            }
+          }
+          catch(ex2) {
+            this.skip.add(id);
+            if(!lmvc_router_imp.is_not_found_exception(ex2)) {
+              return undefined;
+            }
+            continue;
+          }
+        }
+        const ctlr = <lmvc_route_controller>rt.view[0];
+        const md = <lmvc_controller_metedata_arg | undefined>$view.get_view_metadata(ctlr);
+        if(md && Array.isArray(md.rest)) {
+          let required = md.rest.findIndex(x => typeof x !== 'string' && x.is_optional);
+          if((required === -1 && md.rest.length <= (segment.length - idx)) || (required > 0 && required < (segment.length - idx))) {
+            const rest = {
+              pattern: new RegExp(`^${segment.slice(0, idx).join('\\/')}${md.rest.map((_x, i) => {
+                let rt = '(\\/[^\\/]+)';
+                return required !== -1 && i >= required ? `${rt}?` : rt;
+              })}$`),
+              rest: md.rest.map(x => typeof x === 'string' ? x : x.id),
+              node
+            };
+            this.rest.push(rest);
+            ctlr.$arg = segment.slice(idx).reduce<any>((rs, x, idx) => {
+              rs[rest.rest[idx]] = x;
+              return rs;
+            }, {});
+          }
+        }
+        if(ctlr && typeof ctlr.$get_title === 'function') {
+          let rs = ctlr.$get_title();
+          if(typeof rs === 'object' && typeof rs.then === 'function') {
+            rs = await rs;
+          }
+          window.document.title = <string>rs;
+        }
+        return rt;
+      }
+      return undefined;
+    }
+    finally {
+      this.place_holder.parentElement!.removeChild(this.content!);
+    }
   }
 
   async push(path: string) {

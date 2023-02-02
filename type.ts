@@ -129,6 +129,7 @@ export interface lmvc_view<_t_ = lmvc_model> {
 
 export interface lmvc_controller<_m_ = lmvc_model, _t_ = lmvc_model> extends lmvc_view<_t_> {
   $can_leave?(): boolean | Promise<boolean>;
+  $create_model?(): _m_;
   $get_title?(): string | Promise<string>;
   $model: _m_;
   $view: lmvc_view<_m_>[];

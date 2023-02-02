@@ -263,7 +263,10 @@ export class lmvc_app implements lmvc_app_t {
     if(is_root) {
       await lmvc_app.init_views(views.concat(scope.view));
     }
-    this.scope.push(scope);
+    if(scope.view.length) {
+      this.scope.push(scope);
+    }
+    console.debug({node: (<Element>scope.node).outerHTML, view: scope.view });
     return scope;
   }
 
