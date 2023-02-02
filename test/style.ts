@@ -7,6 +7,7 @@ please refer to your license agreement on the use of this file.
 import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
+import { $model } from 'lmvc/model';
 
 let model: any;
 
@@ -24,10 +25,10 @@ describe('l:style view', () => {
       if(y) {
         expect(y.style.length, 'style should be empty').equals(0);
         model.style = 'line-through';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         expect(y.style.textDecoration, 'style should be "line-through"').equals('line-through');
         model.style = 'line-through underline';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         expect(y.style.textDecoration, 'style should be "line-through" and "underline"').contains('underline').contains('line-through');
         y.parentNode?.removeChild(y);
       }

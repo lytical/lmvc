@@ -7,6 +7,7 @@ please refer to your license agreement on the use of this file.
 import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
+import { $model } from 'lmvc/model';
 
 let model: any;
 
@@ -23,7 +24,7 @@ describe('l:html view', () => {
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
         model.text = '<b>html value</b>';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         expect(y.innerHTML).equals('<b>html value</b>');
         y.parentNode?.removeChild(y);
       }

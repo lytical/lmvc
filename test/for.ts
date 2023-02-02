@@ -7,6 +7,7 @@ please refer to your license agreement on the use of this file.
 import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
+import { $model } from 'lmvc/model';
 
 let model: any;
 
@@ -28,7 +29,8 @@ describe('l:for view', () => {
           expect(i instanceof Comment || i instanceof Text, 'unexpected rendered element').is.true;
         }
         const assert_all = async (z: Element) => {
-          await fixture.timeout(20);
+          await $model.after_dispatch;
+          await fixture.timeout(10);
           expect(z.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(model.item.values.length);
           let cnt = 0;
           for(let x = 0; x < z.childNodes.length; ++x) {
@@ -76,7 +78,8 @@ describe('l:for view', () => {
           expect(i instanceof Comment || i instanceof Text, 'unexpected rendered element').is.true;
         }
         const assert_all = async (z: Element) => {
-          await fixture.timeout(20);
+          await $model.after_dispatch;
+          await fixture.timeout(10);
           const key = Object.keys(model.item.values);
           expect(z.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(key.length);
           let cnt = 0;

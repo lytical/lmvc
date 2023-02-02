@@ -7,6 +7,7 @@ please refer to your license agreement on the use of this file.
 import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
+import { $model } from 'lmvc/model';
 
 let model: any;
 
@@ -50,7 +51,7 @@ describe('l:router view', () => {
               expect(await test_app.router!.replace('/lmvc/test/item/controller'), 'failed to reset url').is.true;
               break;
           }
-          await fixture.timeout(10);
+          await $model.after_dispatch;
           expect(++cnt, 'retries expired testing routing').lessThan(10);
         }
         test_app.destroy_node(y);

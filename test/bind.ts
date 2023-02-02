@@ -7,6 +7,7 @@ please refer to your license agreement on the use of this file.
 import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
+import { $model } from 'lmvc/model';
 
 let model: any;
 
@@ -26,22 +27,22 @@ describe('l:bind view', () => {
         expect(i, 'the test element is not in the dom.').is.not.null;
         if(i) {
           model.text = 'bind1';
-          await fixture.timeout(1);
+          await $model.after_dispatch;
           expect(i.value).equals('bind1');
           i.value = 'bind2';
           i.dispatchEvent(new Event('input')); // setting value property doesn't fire event.
-          await fixture.timeout(1);
+          await $model.after_dispatch;
           expect(model.text).equals('bind2');
         }
         i = <HTMLInputElement | null>y.lastElementChild;
         expect(i, 'the test element is not in the dom.').is.not.null;
         if(i) {
           model.item = { text: 'bind3' };
-          await fixture.timeout(1);
+          await $model.after_dispatch;
           expect(i.value).equals('bind3');
           i.value = 'bind4';
           i.dispatchEvent(new Event('input')); // setting value property doesn't fire event.
-          await fixture.timeout(1);
+          await $model.after_dispatch;
           expect(model.item.text).equals('bind4');
         }
         y.parentNode?.removeChild(y);

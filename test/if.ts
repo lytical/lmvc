@@ -7,6 +7,7 @@ please refer to your license agreement on the use of this file.
 import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
+import { $model } from 'lmvc/model';
 
 let model: any;
 
@@ -23,13 +24,13 @@ describe('l:if view', () => {
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
         model.text = 'show';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         expect(y.closest('body')).is.not.null;
         model.text = 'hide';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         expect(y.closest('body')).is.null;
         model.text = 'show';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         expect(y.closest('body')).is.not.null;
         y.parentNode?.removeChild(y);
       }

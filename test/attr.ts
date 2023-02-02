@@ -6,6 +6,7 @@ please refer to your license agreement on the use of this file.
 
 import { expect } from 'chai';
 import { fixture } from './global';
+import { $model } from '../model';
 import test_app from '../app';
 
 let model: any;
@@ -23,22 +24,22 @@ describe('l:attr view', () => {
       expect(y, 'the test element is not in the dom.').is.not.null;
       if(y) {
         model.text = undefined;
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         let val = y.getAttribute('foobar');
         expect(val, 'unexpected "foobar" attribute').is.null;
         expect(y.hasAttribute('disabled'), 'unexpected "disabled" attribute').is.false;
         model.text = 'testing';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         val = y.getAttribute('foobar');
         expect(val, 'attribute not added').equals('testing');
         expect(y.hasAttribute('disabled'), 'unexpected "disabled" attribute').is.false;
         model.text = 'this out';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         val = y.getAttribute('foobar');
         expect(val, 'attribute not added').equals('this out');
         expect(y.hasAttribute('disabled'), 'unexpected "disabled" attribute').is.false;
         model.text = 'disable';
-        await fixture.timeout(1);
+        await $model.after_dispatch;
         val = y.getAttribute('foobar');
         expect(val, 'attribute not added').equals('disable');
         expect(y.hasAttribute('disabled'), 'expected "disabled" attribute').is.true;

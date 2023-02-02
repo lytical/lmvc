@@ -4,6 +4,7 @@
   please refer to your license agreement on the use of this file.
 */
 
+import { future } from '../common/future';
 import { parseScript } from 'esprima';
 import { Subject } from 'rxjs';
 import type { lmvc_model_event, lmvc_model_subject } from './type';
@@ -66,7 +67,14 @@ export class $model {
         queue.timeout = setTimeout(() => {
           const msg = governor.get(subject)!;
           governor.delete(subject);
-          subject.next(msg);
+          try {
+            subject.next(msg);
+          }
+          finally {
+            if(governor.size === 0) {
+              $model.evt.resolve();
+            }
+          }
         });
         return queue;
       },
@@ -153,4 +161,10 @@ export class $model {
   static make_model<_t_ = any>(value: _t_ = <any>{}): _t_ {
     return $model.is_model(value) ? value : $model.create_model<_t_>(value, new Subject<lmvc_model_event[]>());
   }
+
+  static get after_dispatch() {
+    return governor.size ? $model.evt.promise : Promise.resolve();
+  }
+
+  private static evt = new future<void>();
 }
