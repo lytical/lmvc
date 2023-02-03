@@ -266,7 +266,6 @@ export class lmvc_app implements lmvc_app_t {
     if(scope.view.length) {
       this.scope.push(scope);
     }
-    console.debug({node: (<Element>scope.node).outerHTML, view: scope.view });
     return scope;
   }
 

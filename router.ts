@@ -156,6 +156,9 @@ export class lmvc_router_imp implements lmvc_router {
         }
       }
       const segment = path.slice(1).split('/');
+      if(segment.length === 1) {
+        segment.push('main');
+      }
       let error: any;
       for(let idx = segment.length; idx > 0; --idx) {
         let id = segment.slice(0, idx).join(':');

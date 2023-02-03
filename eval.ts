@@ -30,7 +30,6 @@ export abstract class lmvc_eval implements lmvc_view {
         switch(node.type) {
           case 'Identifier':
             if(is_member) {
-              this.prop.push(`${this.prop.pop()}.${node.value}`);
               is_member = false;
             }
             else {
@@ -45,7 +44,7 @@ export abstract class lmvc_eval implements lmvc_view {
         }
       });
       this.prop = Array.from(new Set(this.prop));
-      this.func = Function(`"use strict";return(function(${this.prop.map(x => x.replace('.', '_'))}){"use strict";return(${this.$value.replace(/(.)\.([_a-zA-Z])/g, '$1_$2')});})`)();
+      this.func = Function(`"use strict";return(function(${this.prop}){"use strict";return(${this.$value});})`)();
       this.dispose = $model.get_subject(this.$scope!.controller.$model)!.subscribe({
         next: msg => this.invoke!(msg)
       });
