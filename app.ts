@@ -10,7 +10,7 @@ import { $model } from './model';
 import type { __cstor } from 'common/plain-object';
 import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_router, lmvc_scope, lmvc_view } from './type';
 
-const view_attr_pattern = /\*?\w[\w\-]*(:\w[\w\-]*){1,}/;
+const view_attr_pattern = /\w[\w\-]*(:\w[\w\-]*){1,}/;
 
 export class lmvc_app implements lmvc_app_t {
   constructor() {
@@ -171,30 +171,19 @@ export class lmvc_app implements lmvc_app_t {
       const attr = scope.node.attributes;
       if(attr) {
         let remove: string[] = [];
-        let ctlr: lmvc_controller | undefined;
+        let view: lmvc_view | undefined;
         for(let i = 0, max = attr.length; i < max; ++i) {
           const item = attr.item(i);
           if(item) {
             const match = view_attr_pattern.exec(item.name);
             if(match && match.index === 0) {
               remove.push(item.name);
-              if(item.name.startsWith('*')) {
-                ctlr = <lmvc_controller>await this.create_view_instance(match.input.slice(1, match[0].length));
-                scope.view.push(ctlr);
-                views.push(ctlr);
-                ctlr.$scope = scope;
-                ctlr.$model = $model.make_model(ctlr.$model || {});
-                ctlr.$arg = match.input.slice(match[0].length + 1);
-                ctlr.$value = item.value;
-              }
-              else {
-                let view = await this.create_view_instance(match.input.slice(0, match[0].length));
-                scope.view.push(view);
-                views.push(view);
-                view.$scope = scope;
-                view.$arg = match.input.slice(match[0].length + 1);
-                view.$value = item.value;
-              }
+              view = await this.create_view_instance(match.input.slice(0, match[0].length));
+              scope.view.push(view);
+              views.push(view);
+              view.$scope = scope;
+              view.$arg = match.input.slice(match[0].length + 1);
+              view.$value = item.value;
             }
           }
         }
@@ -203,8 +192,9 @@ export class lmvc_app implements lmvc_app_t {
             attr.removeNamedItem(name);
           }
         }
-        if(ctlr) {
-          let node = await $controller.get_controller_html(ctlr);
+        if($controller.is_controller(view)) {
+          (<lmvc_controller>view).$model = $model.make_model((<lmvc_controller>view).$model || {});
+          let node = await $controller.get_controller_html(view);
           if(node && Array.isArray(node) && node.length) {
             if(node.length > 1) {
               let lang =
@@ -262,7 +252,7 @@ export class lmvc_app implements lmvc_app_t {
               scope.node = node[0];
             }
           }
-          ctlr.$view = (await this.load_descendants(scope.node, ctlr, views)).reduce((rs, x) => {
+          (<lmvc_controller>view).$view = (await this.load_descendants(scope.node, <lmvc_controller>view, views)).reduce((rs, x) => {
             rs.push(...x.view);
             return rs;
           }, <lmvc_view[]>[]);

@@ -14,7 +14,7 @@
     window.run_tests = true;
   </script>
   <div id="mocha"></div>
-  <div id="test-app" *l:test:item:controller></div>
+  <div id="test-app" l:test:item:controller></div>
   <div id="test-attr" l:attr?foobar="text" l:attr?disabled="text==='disable'">test-attr</div>
   <div id="test-bind">
     <input type="text" l:bind="text" />
@@ -30,7 +30,7 @@
   <div id="test-html" l:html="text">test-html</div>
   <div id="test-if" l:if="text!=='hide'">test-if</div>
   <div id="test-on" l:on?test-it="on_load($event,123)">test-on</div>
-  <div id="test-prop" l:prop?text="text" *l:test:item:controller>test-prop</div>
+  <div id="test-prop" l:prop?text="text" l:test:item:controller>test-prop</div>
   <div id="test-router">
     <div l:router="/lmvc/test/item/controller">test-router</div>
   </div>
