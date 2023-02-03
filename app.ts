@@ -199,7 +199,9 @@ export class lmvc_app implements lmvc_app_t {
           }
         }
         for(let name of remove) {
-          attr.removeNamedItem(name);
+          if(attr.getNamedItem(name)) {
+            attr.removeNamedItem(name);
+          }
         }
         if(ctlr) {
           let node = await $controller.get_controller_html(ctlr);
