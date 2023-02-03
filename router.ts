@@ -156,6 +156,7 @@ export class lmvc_router_imp implements lmvc_router {
         }
       }
       const segment = path.slice(1).split('/');
+      let error: any;
       for(let idx = segment.length; idx > 0; --idx) {
         let id = segment.slice(0, idx).join(':');
         if(!id) {
@@ -172,9 +173,12 @@ export class lmvc_router_imp implements lmvc_router {
             throw new Error('not-found');
           }
         }
-        catch(ex) {
+        catch(ex: any) {
           if(!lmvc_router_imp.is_not_found_exception(ex)) {
             return undefined;
+          }
+          if(ex.message !== 'not-found') {
+            console.error(ex);
           }
           try {
             node = this.create_node(id + ':main');
@@ -183,10 +187,14 @@ export class lmvc_router_imp implements lmvc_router {
               throw new Error('not-found');
             }
           }
-          catch(ex2) {
+          catch(ex2: any) {
             this.skip.add(id);
             if(!lmvc_router_imp.is_not_found_exception(ex2)) {
               return undefined;
+            }
+            if(ex2.message !== 'not-found') {
+              console.error(ex2);
+              error = ex2;
             }
             continue;
           }
@@ -219,6 +227,13 @@ export class lmvc_router_imp implements lmvc_router {
           window.document.title = <string>rs;
         }
         return rt;
+      }
+      if(error) {
+        const iframe = window.document.createElement('iframe');
+        iframe.height = '100%';
+        iframe.width = '100%';
+        iframe.src = `data:text/html;charset=utf-8,${encodeURI(error.responseText || error.message || JSON.stringify(error))}`;
+        this.place_holder.parentElement?.insertBefore(iframe, this.place_holder);
       }
       return undefined;
     }
