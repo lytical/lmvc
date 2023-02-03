@@ -246,6 +246,16 @@ export class lmvc_app implements lmvc_app_t {
                   }
                 }
               }
+              const content = window.document.createNodeIterator(node[0], NodeFilter.SHOW_COMMENT, {
+                acceptNode: (child: Comment) => child.textContent?.indexOf('l:content') === -1 ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT
+              }).nextNode();
+              if(content) {
+                const parent = content.parentNode!;
+                while(scope.node.firstChild) {
+                  parent.insertBefore(scope.node.firstChild, content);
+                }
+                parent.removeChild(content);
+              }
               scope.node.parentNode?.replaceChild(node[0], scope.node);
               scope.node = node[0];
             }
