@@ -27,6 +27,7 @@ describe('l:router view', () => {
         let cnt = 0;
         let cont = true;
         while(cont) {
+          await fixture.timeout(10);
           switch(window.location.hash) {
             case '#/':
               window.location.replace('./');
