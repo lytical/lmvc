@@ -172,6 +172,7 @@ export class lmvc_app implements lmvc_app_t {
       if(attr) {
         let remove: string[] = [];
         let view: lmvc_view | undefined;
+        let ctlr: lmvc_controller | undefined;
         for(let i = 0, max = attr.length; i < max; ++i) {
           const item = attr.item(i);
           if(item) {
@@ -184,6 +185,10 @@ export class lmvc_app implements lmvc_app_t {
               view.$scope = scope;
               view.$arg = match.input.slice(match[0].length + 1);
               view.$value = item.value;
+              if($controller.is_controller(view)) {
+                console.assert(ctlr === undefined, 'warning: multiple controllers detected on node ${scope.node.outerHTML}');
+                ctlr = <any>view;
+              }
             }
           }
         }
@@ -192,9 +197,9 @@ export class lmvc_app implements lmvc_app_t {
             attr.removeNamedItem(name);
           }
         }
-        if($controller.is_controller(view)) {
-          (<lmvc_controller>view).$model = $model.make_model((<lmvc_controller>view).$model || {});
-          let node = await $controller.get_controller_html(view);
+        if(ctlr) {
+          ctlr.$model = $model.make_model(ctlr.$model || {});
+          let node = await $controller.get_controller_html(ctlr);
           if(node && Array.isArray(node) && node.length) {
             if(node.length > 1) {
               let lang =
@@ -252,7 +257,7 @@ export class lmvc_app implements lmvc_app_t {
               scope.node = node[0];
             }
           }
-          (<lmvc_controller>view).$view = (await this.load_descendants(scope.node, <lmvc_controller>view, views)).reduce((rs, x) => {
+            ctlr.$view = (await this.load_descendants(scope.node, ctlr, views)).reduce((rs, x) => {
             rs.push(...x.view);
             return rs;
           }, <lmvc_view[]>[]);

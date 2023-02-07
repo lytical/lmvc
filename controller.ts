@@ -78,7 +78,7 @@ export function controller(args: lmvc_controller_metedata_arg = { html: null }) 
   if(typeof args.html === 'string') {
     args.html = $controller.load_html(args.html);
   }
-  return view(args || {});
+  return view(args);
 }
 
 const body_html_pattern = /<body[\s>]/;

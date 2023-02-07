@@ -175,6 +175,8 @@ export class lmvc_router_imp implements lmvc_router {
           }
           if(ex.message !== 'not-found') {
             console.error(ex);
+            error = ex;
+            break;
           }
           try {
             node = this.create_node(id + ':main');
@@ -191,6 +193,7 @@ export class lmvc_router_imp implements lmvc_router {
             if(ex2.message !== 'not-found') {
               console.error(ex2);
               error = ex2;
+              break;
             }
             continue;
           }
