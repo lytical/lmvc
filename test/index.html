@@ -10,9 +10,6 @@
 </head>
 
 <body>
-  <script type="javascript">
-    window.run_tests = true;
-  </script>
   <div id="mocha"></div>
   <div id="test-app" l:test:item:controller></div>
   <div id="test-attr" l:attr?foobar="text" l:attr?disabled="text==='disable'">test-attr</div>
@@ -37,4 +34,7 @@
   <div id="test-style" l:style?text-decoration="style">test-style</div>
   <div id="test-text" l:text="text">test-text</div>
   <script data-main="/lmvc/main" src="/node_modules/requirejs/require.js"></script>
+  <script>
+    setTimeout(() => run_tests(), 250);
+  </script>
 </body>

@@ -3,7 +3,7 @@
 lytical(r) is a registered trademark of lytical, inc.
 please refer to your license agreement on the use of this file.
 */
-if((<any>window).run_tests) {
+function run_tests() {
   require.config({
     baseUrl: "/",
     deps: [
