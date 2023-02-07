@@ -232,8 +232,15 @@ export class lmvc_router_imp implements lmvc_router {
         iframe.height = '100%';
         iframe.width = '100%';
         iframe.src = `data:text/html;charset=utf-8,${encodeURI(error.responseText || error.message || JSON.stringify(error))}`;
-        this.place_holder.parentElement?.insertBefore(iframe, this.place_holder);
-      }
+        const s = this.$scope!;
+        return {
+          app: s.app,
+          controller: s.controller,
+          node: iframe,
+          template: iframe,
+          view: [{}]
+        };
+       }
       return undefined;
     }
     finally {
