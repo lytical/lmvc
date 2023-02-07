@@ -17,7 +17,7 @@ export class lmvc_app implements lmvc_app_t {
     const html = document.querySelector('html');
     console.assert(html !== null);
     if(html !== null) {
-      this.observer = new MutationObserver(x => this.on_mutation(x).catch(ex => console.error(ex)));
+      this.observer = new MutationObserver(x => this.task.then(() => this.on_mutation(x), ex => console.error(ex)));
       this.observer.observe(html, { childList: true, subtree: true });
     }
   }
@@ -315,6 +315,7 @@ export class lmvc_app implements lmvc_app_t {
   private observer?: MutationObserver;
   router?: lmvc_router;
   private scope: lmvc_scope[] = [];
+  private task = Promise.resolve();
   private readonly view: Record<string, Promise<__cstor<lmvc_view>>> = {};
 }
 
