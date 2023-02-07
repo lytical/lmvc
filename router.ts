@@ -37,7 +37,7 @@ export class lmvc_router_imp implements lmvc_router {
 
   private create_node(id: string) {
     let node = <Element>this.$scope!.node;
-    node.innerHTML = `<div *${id}></div>`;
+    node.innerHTML = `<div ${id}></div>`;
     return <HTMLDivElement>node.firstElementChild!;
   }
 
@@ -318,13 +318,13 @@ export class lmvc_router_imp implements lmvc_router {
   }
 
   $mount(): void | Promise<any> {
-    if(!this.place_holder.parentNode && this.$scope?.node.parentNode) {
-      this.$scope.node.parentNode.replaceChild(this.place_holder, this.$scope.node);
-      return this.do_initial_route();
+    if(this.$scope!.node.parentNode) {
+      this.$scope!.node.parentNode.replaceChild(this.place_holder, this.$scope!.node);
     }
+    return this.do_initial_route();
   }
 
-  async $ready() {
+  $ready() {
     const node = this.$scope!.node;
     node.childNodes.forEach(x => {
       if(x.nodeType === Node.ELEMENT_NODE) {
@@ -341,7 +341,6 @@ export class lmvc_router_imp implements lmvc_router {
     }
     if(node.parentNode) {
       node.parentNode.replaceChild(this.place_holder, node);
-      await this.do_initial_route();
     }
   }
 

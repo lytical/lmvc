@@ -77,7 +77,7 @@ export class lmvc_app implements lmvc_app_t {
   find_all_scopes(node: Node) {
     const rt: lmvc_scope[] = [];
     for(let scope of this.scope) {
-      if(node.contains(scope.node)) {
+      if(node.contains(scope.node) || (scope.view.some(x => (<any>x).place_holder && node.contains((<any>x).place_holder)))) {
         rt.push(scope);
       }
     }
@@ -87,7 +87,7 @@ export class lmvc_app implements lmvc_app_t {
   find_scope(node: Node) {
     const rt: lmvc_scope[] = [];
     for(let scope of this.scope) {
-      if(scope.node === node) {
+      if(scope.node === node || (scope.view.some(x => (<any>x).place_holder === node))) {
         rt.push(scope);
       }
     }
@@ -128,7 +128,7 @@ export class lmvc_app implements lmvc_app_t {
   }
 
   private invoke_scoped_views(node: Node, method: string, filter = (_: lmvc_view) => true): PromiseLike<any> {
-    const scope = this.find_scope(node);
+    const scope = this.find_all_scopes(node);
     return scope ? $view.invoke_method(method, scope.reduce((rs, x) => {
       rs.push(...x.view);
       return rs;
@@ -273,6 +273,10 @@ export class lmvc_app implements lmvc_app_t {
 
   private on_mutation(recs: MutationRecord[]) {
     const rt: PromiseLike<any>[] = [];
+    /*console.debug({
+      added: (recs.reduce((rs, x) => [...rs, x.addedNodes], <any[]>[])),
+      removed: (recs.reduce((rs, x) => [...rs, x.removedNodes], <any[]>[]))
+    });*/
     for(let x of recs) {
       x.removedNodes.forEach(y => rt.push(this.invoke_scoped_views(y, '$unmount')));
     }
