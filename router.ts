@@ -25,17 +25,6 @@ export class lmvc_router_imp implements lmvc_router {
     return rt;
   }
 
-  private async set_window_title() {
-    const ctlr = <lmvc_controller | undefined>this.route[this.current].view[0];
-    if(ctlr && typeof ctlr.$get_title === 'function') {
-      let rs = ctlr.$get_title();
-      if(typeof rs === 'object' && typeof rs.then === 'function') {
-        rs = await rs;
-      }
-      window.document.title = <string>rs;
-    }
-  }
-
   private create_node(id: string) {
     let node = <Element>this.$scope!.node;
     node.innerHTML = `<div ${id}></div>`;
@@ -179,8 +168,10 @@ export class lmvc_router_imp implements lmvc_router {
           }
           if(ex.message !== 'not-found') {
             console.error(ex);
-            error = ex;
-            break;
+            if(id.endsWith(':main')) {
+              error = ex;
+              break;
+            }
           }
           try {
             node = this.create_node(id + ':main');
@@ -288,6 +279,17 @@ export class lmvc_router_imp implements lmvc_router {
       return true;
     }
     return false;
+  }
+
+  private async set_window_title() {
+    const ctlr = <lmvc_controller | undefined>this.route[this.current].view[0];
+    if(ctlr && typeof ctlr.$get_title === 'function') {
+      let rs = ctlr.$get_title();
+      if(typeof rs === 'object' && typeof rs.then === 'function') {
+        rs = await rs;
+      }
+      window.document.title = <string>rs;
+    }
   }
 
   private trim() {
