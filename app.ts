@@ -95,6 +95,7 @@ export class lmvc_app implements lmvc_app_t {
   }
 
   private get_scope_self_and_descendant(scope: lmvc_scope) {
+    console.assert(scope !== undefined);
     const rt: lmvc_scope[] = [];
     for(let x of this.scope) {
       if(scope.node.contains(x.node)) {

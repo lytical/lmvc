@@ -228,6 +228,7 @@ export class lmvc_router_imp implements lmvc_router {
         iframe.width = '100%';
         iframe.src = `data:text/html;charset=utf-8,${encodeURI(error.responseText || error.message || JSON.stringify(error))}`;
         const s = this.$scope!;
+        window.document.title = error.message || 'error';
         return {
           app: s.app,
           controller: s.controller,
@@ -248,7 +249,7 @@ export class lmvc_router_imp implements lmvc_router {
     if(await this.unmount_current()) {
       const scope = await this.append(path);
       if(scope) {
-        window.history.pushState(++this.current, '', `./#${path}`);
+        window.history.pushState(this.current, '', `./#${path}`);
         return true;
       }
     }
@@ -264,7 +265,7 @@ export class lmvc_router_imp implements lmvc_router {
     if(!await this.unmount_current()) {
       return false;
     }
-    let scope = await this.load(path);
+    let scope = await this.create_scope(path);
     if(scope) {
       if(this.current === -1) {
         this.current = 0;
@@ -275,7 +276,6 @@ export class lmvc_router_imp implements lmvc_router {
         this.route[this.current] = scope;
       }
       window.history.replaceState(0, '', `./#${path}`);
-      this.place_holder.parentElement!.insertBefore(scope.node, this.place_holder);
       return true;
     }
     return false;
