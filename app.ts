@@ -269,7 +269,10 @@ export class lmvc_app implements lmvc_app_t {
       scope.controller.$model = $model.make_model(scope.controller.$model || {});
     }
     if(is_root) {
-      await lmvc_app.init_views(views.concat(scope.view));
+      const init = views.concat(scope.view);
+      const unique = new Set(init);
+      console.assert(init.length === unique.size);
+      await lmvc_app.init_views(init);
     }
     if(scope.view.length) {
       this.scope.push(scope);
