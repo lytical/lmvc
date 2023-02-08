@@ -59,24 +59,26 @@ export class lmvc_router_imp implements lmvc_router {
     await new Promise<void>(res => setTimeout(res, 0));
     if(this.current !== -1) {
       let scope = this.route[this.current];
-      let ctlr = <lmvc_controller>scope.view[0];
-      if(typeof ctlr.$can_leave === 'function') {
-        let rs = ctlr.$can_leave();
-        if(typeof rs === 'object' && typeof rs.then === 'function') {
-          rs = await rs;
-        }
-        if(!rs) {
-          if(typeof evt.state !== 'number' || this.current < evt.state) {
-            window.history.back();
+      if(scope) {
+        let ctlr = <lmvc_controller>scope.view[0];
+        if(typeof ctlr.$can_leave === 'function') {
+          let rs = ctlr.$can_leave();
+          if(typeof rs === 'object' && typeof rs.then === 'function') {
+            rs = await rs;
           }
-          else {
-            window.history.forward();
+          if(!rs) {
+            if(typeof evt.state !== 'number' || this.current < evt.state) {
+              window.history.back();
+            }
+            else {
+              window.history.forward();
+            }
+            return;
           }
-          return;
         }
+        let node = scope.node;
+        node.parentElement!.removeChild(node);
       }
-      let node = scope.node;
-      node.parentElement!.removeChild(node);
     }
     if(typeof evt.state === 'number' && evt.state >= 0) {
       this.current = evt.state;
@@ -240,7 +242,9 @@ export class lmvc_router_imp implements lmvc_router {
       return undefined;
     }
     finally {
-      this.place_holder.parentElement!.removeChild(this.content!);
+      if(this.content?.parentElement) {
+        this.place_holder.parentElement!.removeChild(this.content!);
+      }
     }
   }
 
@@ -297,7 +301,6 @@ export class lmvc_router_imp implements lmvc_router {
     const task: Promise<void>[] = [];
     if(this.current !== -1) {
       for(let scope of this.route.splice(this.current + 1)) {
-        console.debug({ destroy_scope: scope });
         task.push(app.destroy_scope(scope));
       }
     }
