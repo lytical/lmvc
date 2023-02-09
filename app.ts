@@ -25,7 +25,8 @@ export class lmvc_app implements lmvc_app_t {
   async bootstrap(ctlr: lmvc_controller = { $model: {}, $view: [] }): Promise<lmvc_controller> {
     console.assert(document.body.parentNode !== null);
     if(document.body.parentNode !== null) {
-      const views: lmvc_view[] = [ctlr];
+      const views = new Set<lmvc_view>();
+      views.add(ctlr);
       ctlr.$model = $model.make_model(ctlr.$model || {});
       ctlr.$scope = await this.load_scope(document.body.parentNode, ctlr, views);
       await this.load_descendants(ctlr.$scope.node, ctlr, views);
@@ -114,16 +115,17 @@ export class lmvc_app implements lmvc_app_t {
       }, []);
   }
 
-  private static async init_views(views: lmvc_view[]) {
-    let wait = <Promise<any>[]>views
+  private static async init_views(views: Set<lmvc_view>) {
+    const list = Array.from(views)
+    let wait = <Promise<any>[]>list
       .map(x => typeof x.$init === 'function' ? x.$init() : undefined)
       .filter(x => typeof x === 'object' && typeof x.then === 'function');
     await Promise.all(wait);
-    wait = <Promise<any>[]>views
+    wait = <Promise<any>[]>list
       .map(x => typeof x.$ready === 'function' ? x.$ready() : undefined)
       .filter(x => typeof x === 'object' && typeof x.then === 'function');
     await Promise.all(wait);
-    for(let x of views) {
+    for(let x of list) {
       x.$is_ready = true;
     }
   }
@@ -146,7 +148,7 @@ export class lmvc_app implements lmvc_app_t {
         .join(seperator));
   }
 
-  load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]) {
+  load_descendants(node: Node, controller: lmvc_controller, views?: Set<lmvc_view>) {
     let wait: Promise<lmvc_scope>[] = [];
     let it = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, lmvc_app.node_iterator);
     for(let next = <Element>it.nextNode(); next; next = <Element>it.nextNode()) {
@@ -155,7 +157,7 @@ export class lmvc_app implements lmvc_app_t {
     return Promise.all(wait);
   }
 
-  async load_scope(node: Node, ctlr: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope> {
+  async load_scope(node: Node, ctlr: lmvc_controller, views?: Set<lmvc_view>): Promise<lmvc_scope> {
     const scope: lmvc_scope = {
       app: this,
       controller: ctlr,
@@ -166,7 +168,7 @@ export class lmvc_app implements lmvc_app_t {
     let is_root: true | undefined;
     if(!views) {
       is_root = true;
-      views = [];
+      views = new Set<lmvc_view>();
     }
     if(scope.node instanceof Element) {
       const attr = scope.node.attributes;
@@ -182,7 +184,7 @@ export class lmvc_app implements lmvc_app_t {
               remove.push(item.name);
               view = await this.create_view_instance(match.input.slice(0, match[0].length));
               scope.view.push(view);
-              views.push(view);
+              views.add(view);
               view.$scope = scope;
               view.$arg = match.input.slice(match[0].length + 1);
               view.$value = item.value;
@@ -269,10 +271,10 @@ export class lmvc_app implements lmvc_app_t {
       scope.controller.$model = $model.make_model(scope.controller.$model || {});
     }
     if(is_root) {
-      const init = views.concat(scope.view);
-      const unique = new Set(init);
-      console.assert(init.length === unique.size);
-      await lmvc_app.init_views(init);
+      for(let x of scope.view) {
+        views.add(x);
+      }
+      await lmvc_app.init_views(views);
     }
     if(scope.view.length) {
       this.scope.push(scope);

@@ -39,14 +39,14 @@ export interface lmvc_app {
    * @param controller 
    * @param views 
    */
-  load_descendants(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope[]>;
+  load_descendants(node: Node, controller: lmvc_controller, views?: Set<lmvc_view>): Promise<lmvc_scope[]>;
   /**
    * 
    * @param node 
    * @param controller 
    * @param views 
    */
-  load_scope(node: Node, controller: lmvc_controller, views?: lmvc_view[]): Promise<lmvc_scope>;
+  load_scope(node: Node, controller: lmvc_controller, views?: Set<lmvc_view>): Promise<lmvc_scope>;
   /**
    * 
    * @param id 
