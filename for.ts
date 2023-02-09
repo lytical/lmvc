@@ -9,6 +9,7 @@ import { $model } from './model';
 import { view } from './view';
 import type { Unsubscribable } from 'rxjs';
 import type { lmvc_controller, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
+import { lmvc_app } from './app';
 
 // warning: the following value should never be zero.
 const leaf_pool_max_sz = 50;
@@ -36,25 +37,38 @@ export class lmvc_for implements lmvc_view {
         let leaf: lmvc_scope | undefined = this.leaf[i];
         if(i < items.length) {
           if(!leaf) {
+            const views = new Set<lmvc_view>();
             leaf = <lmvc_scope | undefined>(this.leaf_pool.length ?
               this.leaf_pool.pop() :
-              await this.$scope!.app.load_scope(this.template!.cloneNode(true), this.controller!));
+              await this.$scope!.app.load_scope(this.template!.cloneNode(true), this.controller!, views));
             if(leaf) {
               const idx = i;
+              let model = {};
+              Object.defineProperty(model, item_nm!, {
+                get() {
+                  return self.get_items()[idx];
+                }
+              });
+              if(idx_nm !== undefined) {
+                Object.defineProperty(model, idx_nm, {
+                  get() {
+                    return idx;
+                  }
+                });
+              }
+              Object.setPrototypeOf(model, this.controller!.$model);
               leaf.controller = new Proxy(leaf.controller, {
                 get(target: any, property: string | symbol | number, receiver?: any) {
-                  return property !== '$model' ? Reflect.get(target, property, receiver) : new Proxy(self.controller!.$model, {
-                    get(target: any, property: string | symbol | number, receiver?: any) {
-                      if(property === idx_nm) {
-                        return idx;
-                      }
-                      return property === item_nm ? self.get_items()[idx] : Reflect.get(target, property, receiver);
-                    }
-                  });
+                  return property !== '$model' ? Reflect.get(target, property, receiver) : model;
                 }
               });
               this.leaf[i] = leaf;
+              if(views.size) {
+                await this.$scope!.app.load_descendants(leaf.node, leaf.controller, views);
+                await lmvc_app.init_views(views);
+              }
               parent.insertBefore(leaf.node, this.place_holder);
+              $model.get_subject(model)?.next();
             }
             else {
               console.assert(false, 'unexpected');
