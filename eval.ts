@@ -4,20 +4,11 @@
   please refer to your license agreement on the use of this file.
 */
 
-import type { Unsubscribable } from 'rxjs';
 import { tokenize } from 'esprima';
-import { $model } from './model';
 import obj_util from '../common/obj-util';
 import type { lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
 export abstract class lmvc_eval implements lmvc_view {
-  $dispose() {
-    if(this.dispose) {
-      this.dispose.unsubscribe();
-      this.dispose = undefined;
-    }
-  }
-
   $init() {
     if(this.$value) {
       this.$arg = typeof this.$arg === 'string' ? decodeURI(this.$arg) : undefined;
@@ -45,33 +36,30 @@ export abstract class lmvc_eval implements lmvc_view {
       });
       this.prop = Array.from(new Set(this.prop));
       this.func = Function(`"use strict";return(function(${this.prop}){"use strict";return(${this.$value});})`)();
-      this.dispose = $model.get_subject(this.$scope!.controller.$model)!.subscribe({
-        next: msg => this.invoke!(msg)
-      });
     }
     else {
       console.warn(`(${Object.getPrototypeOf(this).constructor.name}) missing 'value' in statement.`);
     }
   }
 
-  private invoke(msg: lmvc_model_event[] = []) {
+  $model_changed(evt: lmvc_model_event[]): void {
     if(this.func) {
       this.update(this.func.apply(undefined, this.prop.map(x => {
         const rt = obj_util.select(x, this.$scope!.controller.$model);
         return typeof rt === 'function' ? rt.bind(this.$scope!.controller.$model) : rt;
-      })), msg, this.$arg);
+      })), evt, this.$arg);
     }
   }
 
   $mount() {
     if(this.func) {
-      this.invoke();
+      this.$model_changed([]);
     }
   }
 
   $ready() {
     if(this.func) {
-      this.invoke();
+      this.$model_changed([]);
     }
   }
 
@@ -80,7 +68,6 @@ export abstract class lmvc_eval implements lmvc_view {
   $arg?: string;
   $scope?: lmvc_scope;
   $value?: string;
-  dispose?: Unsubscribable;
   func?: Function;
   prop!: string[];
 }

@@ -5,22 +5,13 @@
 */
 
 import { view } from './view';
-import { $model } from './model';
 import obj_util from '../common/obj-util';
-import type { Unsubscribable } from 'rxjs';
-import type { lmvc_scope, lmvc_view } from './type';
+import type { lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
 @view()
 export class lmvc_bind implements lmvc_view {
   constructor() {
     this.on_input_handler = lmvc_bind.prototype.on_input.bind(this);
-  }
-
-  $dispose() {
-    if(this.dispose) {
-      this.dispose.unsubscribe();
-      this.dispose = undefined;
-    }
   }
 
   private get_value(et: EventTarget, _format?: string) {
@@ -60,22 +51,20 @@ export class lmvc_bind implements lmvc_view {
   }
 
   $init() {
-    const model = this.$scope!.controller.$model;
     if(this.$value) {
       this.prop = this.$value.split('.');
-      this.dispose = $model.get_subject(model)!.subscribe({
-        next: () => {
-          if(this.updating) {
-            this.updating = undefined;
-          }
-          else if(document.body.contains(this.$scope!.node)) {
-            this.set_value(this.$scope!.node, obj_util.select(this.prop!, model));
-          }
-        }
-      });
     }
     else {
       console.warn('l:bind missing property name. use l:bind="property_name"');
+    }
+  }
+
+  $model_changed(_evt: lmvc_model_event[]): void {
+    if(this.updating) {
+      this.updating = undefined;
+    }
+    else if(document.body.contains(this.$scope!.node)) {
+      this.set_value(this.$scope!.node, obj_util.select(this.prop!, this.$scope!.controller.$model));
     }
   }
 
@@ -94,7 +83,6 @@ export class lmvc_bind implements lmvc_view {
   $arg?: string;
   $scope?: lmvc_scope;
   $value?: string;
-  private dispose?: Unsubscribable;
   private on_input_handler?: (evt: InputEvent) => void;
   private prop?: string[];
   private updating?: true;

@@ -7,6 +7,7 @@
 import { $view } from './view';
 import { $controller } from './controller';
 import { $model } from './model';
+import type { Unsubscribable } from 'rxjs';
 import type { __cstor } from 'common/plain-object';
 import type { lmvc_app as lmvc_app_t, lmvc_controller, lmvc_router, lmvc_scope, lmvc_view } from './type';
 
@@ -63,6 +64,9 @@ export class lmvc_app implements lmvc_app_t {
       const task: Promise<void>[] = [];
       for(let i = ls.length - 1; i !== -1; --i) {
         for(let v of ls[i].view) {
+          if(typeof (<controller_t>v).$sub === 'function') {
+            (<controller_t>v).$sub?.unsubscribe();
+          }
           if(typeof v.$dispose === 'function') {
             let rs = v.$dispose();
             if(typeof rs === 'object' && typeof rs?.then === 'function') {
@@ -160,7 +164,7 @@ export class lmvc_app implements lmvc_app_t {
       if(attr) {
         let remove: string[] = [];
         let view: lmvc_view | undefined;
-        let ctlr: lmvc_controller | undefined;
+        let ctlr: controller_t | undefined;
         for(let i = 0, max = attr.length; i < max; ++i) {
           const item = attr.item(i);
           if(item) {
@@ -245,10 +249,17 @@ export class lmvc_app implements lmvc_app_t {
               scope.node = node[0];
             }
           }
-            ctlr.$view = (await this.load_descendants(scope.node, ctlr, views)).reduce((rs, x) => {
+          ctlr.$view = (await this.load_descendants(scope.node, ctlr, views)).reduce((rs, x) => {
             rs.push(...x.view);
             return rs;
           }, <lmvc_view[]>[]);
+          ctlr.$sub = $model.get_subject(ctlr.$model)?.subscribe({
+            next: x => {
+              for(let y of [ctlr!, ...ctlr!.$view].filter(y => typeof y.$model_changed === 'function')) {
+                y.$model_changed!(x);
+              }
+            }
+          });
         }
       }
     }
@@ -315,4 +326,5 @@ export class lmvc_app implements lmvc_app_t {
   private readonly view: Record<string, Promise<__cstor<lmvc_view>>> = {};
 }
 
+type controller_t = lmvc_controller & { $sub?: Unsubscribable };
 export default new lmvc_app();

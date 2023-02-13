@@ -88,6 +88,11 @@ export interface lmvc_view<_t_ = lmvc_model> {
   $init?(): void | Promise<any>;
 
   /**
+   * an optional method that's invoked after the model has changed.
+   */
+  $model_changed?(evt: lmvc_model_event[]): void;
+
+  /**
    * an optional method that's invoked when the view instance is placed in the dom.
    * this method may be called more than once for a view instance.
    */
