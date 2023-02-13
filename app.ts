@@ -30,7 +30,7 @@ export class lmvc_app implements lmvc_app_t {
       ctlr.$model = $model.make_model(ctlr.$model || {});
       ctlr.$scope = await this.load_scope(document.body.parentNode, ctlr, views);
       await this.load_descendants(ctlr.$scope.node, ctlr, views);
-      await lmvc_app.init_views(views);
+      await $view.init_views(Array.from(views));
       await $view.invoke_method('$mount', this.get_scope_views_self_and_descendant(ctlr.$scope), x => x.$is_ready === true);
     }
     return ctlr;
@@ -113,21 +113,6 @@ export class lmvc_app implements lmvc_app_t {
         rs.push(...x);
         return rs;
       }, []);
-  }
-
-  private static async init_views(views: Set<lmvc_view>) {
-    const list = Array.from(views)
-    let wait = <Promise<any>[]>list
-      .map(x => typeof x.$init === 'function' ? x.$init() : undefined)
-      .filter(x => typeof x === 'object' && typeof x.then === 'function');
-    await Promise.all(wait);
-    wait = <Promise<any>[]>list
-      .map(x => typeof x.$ready === 'function' ? x.$ready() : undefined)
-      .filter(x => typeof x === 'object' && typeof x.then === 'function');
-    await Promise.all(wait);
-    for(let x of list) {
-      x.$is_ready = true;
-    }
   }
 
   private invoke_scoped_views(node: Node, method: string, filter = (_: lmvc_view) => true): PromiseLike<any> {
@@ -274,7 +259,7 @@ export class lmvc_app implements lmvc_app_t {
       for(let x of scope.view) {
         views.add(x);
       }
-      await lmvc_app.init_views(views);
+      await $view.init_views(Array.from(views));
     }
     if(scope.view.length) {
       this.scope.push(scope);

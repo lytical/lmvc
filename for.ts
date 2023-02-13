@@ -6,10 +6,9 @@ please refer to your license agreement on the use of this file.
 
 import { tokenize } from 'esprima';
 import { $model } from './model';
-import { view } from './view';
+import { $view, view } from './view';
 import type { Unsubscribable } from 'rxjs';
 import type { lmvc_controller, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
-import { lmvc_app } from './app';
 
 // warning: the following value should never be zero.
 const leaf_pool_max_sz = 50;
@@ -65,7 +64,7 @@ export class lmvc_for implements lmvc_view {
               this.leaf[i] = leaf;
               if(views.size) {
                 await this.$scope!.app.load_descendants(leaf.node, leaf.controller, views);
-                await lmvc_app.init_views(views);
+                await $view.init_views(Array.from(views));
               }
               parent.insertBefore(leaf.node, this.place_holder);
               $model.get_subject(model)?.next();

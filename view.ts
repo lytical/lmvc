@@ -20,6 +20,22 @@ export class $view {
     return undefined;
   }
 
+
+  static async init_views(views: lmvc_view[]) {
+    const list = Array.from(views)
+    let wait = <Promise<any>[]>list
+      .map(x => typeof x.$init === 'function' ? x.$init() : undefined)
+      .filter(x => typeof x === 'object' && typeof x.then === 'function');
+    await Promise.all(wait);
+    wait = <Promise<any>[]>list
+      .map(x => typeof x.$ready === 'function' ? x.$ready() : undefined)
+      .filter(x => typeof x === 'object' && typeof x.then === 'function');
+    await Promise.all(wait);
+    for(let x of list) {
+      x.$is_ready = true;
+    }
+  }
+
   static invoke_method(method: string, views: lmvc_view[], filter = (_: lmvc_view) => true): Promise<any> {
     return Promise.all(views
       .filter((x: any) => typeof x[method] === 'function' && filter(x))
