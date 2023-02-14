@@ -43,6 +43,7 @@ export abstract class lmvc_eval implements lmvc_view {
   }
 
   $model_changed(evt: lmvc_model_event[]): void {
+    console.debug({ [Object.getPrototypeOf(this).constructor.name]: [evt, this.$value, JSON.stringify(this.$scope?.controller.$model)] });
     if(this.func) {
       this.update(this.func.apply(undefined, this.prop.map(x => {
         const rt = obj_util.select(x, this.$scope!.controller.$model);
