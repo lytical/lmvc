@@ -148,10 +148,10 @@ export class lmvc_app implements lmvc_app_t {
     return Promise.all(wait);
   }
 
-  async load_scope(node: Node, ctlr: lmvc_controller, views?: Set<lmvc_view>): Promise<lmvc_scope> {
-    const scope: lmvc_scope = {
+  async load_scope(node: Node, controller: lmvc_controller, views?: Set<lmvc_view>): Promise<lmvc_scope> {
+    const rt: lmvc_scope = {
       app: this,
-      controller: ctlr,
+      controller,
       node,
       template: node.cloneNode(),
       view: []
@@ -161,8 +161,8 @@ export class lmvc_app implements lmvc_app_t {
       is_root = true;
       views = new Set<lmvc_view>();
     }
-    if(scope.node instanceof Element) {
-      const attr = scope.node.attributes;
+    if(rt.node instanceof Element) {
+      const attr = rt.node.attributes;
       if(attr) {
         let remove: string[] = [];
         let view: lmvc_view | undefined;
@@ -174,9 +174,10 @@ export class lmvc_app implements lmvc_app_t {
             if(match && match.index === 0) {
               remove.push(item.name);
               view = await this.create_view_instance(match.input.slice(0, match[0].length));
-              scope.view.push(view);
+              rt.view.push(view);
               views.add(view);
-              view.$scope = scope;
+              rt.controller.$view.push(view);
+              view.$scope = rt;
               view.$arg = match.input.slice(match[0].length + 1);
               view.$value = item.value;
               if($controller.is_controller(view)) {
@@ -216,22 +217,22 @@ export class lmvc_app implements lmvc_app_t {
               console.assert(html.length === 1);
               node = [html[0]];
             }
-            if(node[0] instanceof Element && scope.node instanceof Element) {
-              if(node[0].attributes && scope.node.attributes) {
-                for(let i = 0, max = scope.node.attributes.length; i < max; ++i) {
-                  const attr = scope.node.attributes.item(i);
+            if(node[0] instanceof Element && rt.node instanceof Element) {
+              if(node[0].attributes && rt.node.attributes) {
+                for(let i = 0, max = rt.node.attributes.length; i < max; ++i) {
+                  const attr = rt.node.attributes.item(i);
                   if(attr) {
                     if(!node[0].hasAttribute(attr.name)) {
-                      scope.node.attributes.removeNamedItem(attr.name);
+                      rt.node.attributes.removeNamedItem(attr.name);
                       node[0].attributes.setNamedItem(attr);
                       --i;
                     }
                     else {
                       if(attr.name === 'style') {
-                        lmvc_app.join_attrib_value('style', node[0], scope.node, ';');
+                        lmvc_app.join_attrib_value('style', node[0], rt.node, ';');
                       }
                       else {
-                        lmvc_app.join_attrib_value(attr.name, node[0], scope.node, ' ');
+                        lmvc_app.join_attrib_value(attr.name, node[0], rt.node, ' ');
                       }
                     }
                   }
@@ -242,36 +243,33 @@ export class lmvc_app implements lmvc_app_t {
               }).nextNode();
               if(content) {
                 const parent = content.parentNode!;
-                while(scope.node.firstChild) {
-                  parent.insertBefore(scope.node.firstChild, content);
+                while(rt.node.firstChild) {
+                  parent.insertBefore(rt.node.firstChild, content);
                 }
                 parent.removeChild(content);
               }
-              scope.node.parentNode?.replaceChild(node[0], scope.node);
-              scope.node = node[0];
+              rt.node.parentNode?.replaceChild(node[0], rt.node);
+              rt.node = node[0];
             }
           }
-          ctlr.$view = (await this.load_descendants(scope.node, ctlr, views)).reduce((rs, x) => {
-            rs.push(...x.view);
-            return rs;
-          }, <lmvc_view[]>[]);
+          await this.load_descendants(rt.node, ctlr, views);
           lmvc_app.subscribe_to_model(ctlr);
         }
       }
     }
-    if(scope.controller) {
-      scope.controller.$model = $model.make_model(scope.controller.$model || {});
+    if(rt.controller) {
+      rt.controller.$model = $model.make_model(rt.controller.$model || {});
     }
     if(is_root) {
-      for(let x of scope.view) {
+      for(let x of rt.view) {
         views.add(x);
       }
       await $view.init_views(Array.from(views));
     }
-    if(scope.view.length) {
-      this.scope.push(scope);
+    if(rt.view.length) {
+      this.scope.push(rt);
     }
-    return scope;
+    return rt;
   }
 
   static subscribe_to_model(ctlr: controller_t) {
