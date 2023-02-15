@@ -6,27 +6,20 @@ please refer to your license agreement on the use of this file.
 
 import { tokenize } from 'esprima';
 import { $view, view } from './view';
-import type { lmvc_controller, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
-
-// warning: the following value should never be zero.
-const leaf_pool_max_sz = 50;
+import type { lmvc_controller, lmvc_model, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
 @view()
 export class lmvc_for implements lmvc_view {
   private get_items() {
     const model = this.controller!.$model;
-    const item: unknown[] = this.func!.apply(undefined, this.prop.map(x => {
+    const item: unknown[] | object | undefined | null = this.func!.apply(undefined, this.prop.map(x => {
       const rt = model[x];
       return typeof rt === 'function' ? rt.bind(model) : rt;
     }));
-    return item ? (this.op_is_in === true ? Object.keys(item || {}) : item || []) : [];
+    return <unknown[]>(item ? (this.op_is_in === true ? Object.keys(item || {}) : item || []) : []);
   }
 
   private async do_render() {
-    if(this.updating) {
-      this.updating = undefined;
-      return;
-    }
     const parent = this.place_holder.parentElement;
     if(parent && this.controller) {
       const items = this.get_items();
@@ -54,11 +47,9 @@ export class lmvc_for implements lmvc_view {
           Object.setPrototypeOf(model, this.controller.$model);
           const controller = new Proxy(this.controller, {
             get(target: any, property: string | symbol | number, receiver?: any) {
-              console.debug({target})
               return property === '$model' ? model : Reflect.get(target, property, receiver);
             },
             set(target: any, property: string | symbol | number, value: unknown, receiver: any) {
-              console.debug({target, value})
               return property === '$model' ? true : Reflect.set(target, property, value, receiver);
             },
           });
@@ -92,14 +83,9 @@ export class lmvc_for implements lmvc_view {
         }
       }
       for(let x of remove) {
-        this.leaf.splice(this.leaf.indexOf(x), 1);
-        if(this.leaf_pool.length < leaf_pool_max_sz) {
-          parent.removeChild(x.node);
-          x.controller = this.controller!;
-          this.leaf_pool.push(x);
-        }
-        else {
-          await x.app.destroy_scope(x);
+        const n = this.leaf[this.leaf.indexOf(x)].node;
+        if(n.parentNode) {
+          n.parentNode.removeChild(n);
         }
       }
     }
@@ -193,13 +179,7 @@ export class lmvc_for implements lmvc_view {
       }
       this.governor = setTimeout(() => {
         this.governor = undefined;
-        this.task = this.task.then(() => this.do_render().then(() => {
-          for(let x of this.leaf) {
-            if(typeof x.view[0].$model_changed === 'function') {
-              x.view[0].$model_changed(evt);
-            }
-          }
-        }, ex=>console.error(ex)), ex => console.error(ex));
+        this.task = this.task.then(() => this.do_render(), ex => console.error(ex));
       }, 10);
     }
   }
@@ -209,6 +189,7 @@ export class lmvc_for implements lmvc_view {
   }
 
   $ready() {
+    this.model = { _$_: [] };
     this.controller = this.$scope!.controller;
     const node = this.$scope!.node;
     console.assert(node.parentNode !== null, 'unexpected (for) view element has no parent');
@@ -223,13 +204,12 @@ export class lmvc_for implements lmvc_view {
   private idx_nm?: string;
   private item_nm?: string;
   private leaf: lmvc_scope[] = [];
-  private leaf_pool: lmvc_scope[] = [];
+  private model?: Record<string | number | symbol, unknown> & { _$_: unknown[] };
   private op_is_in?: boolean;
   private place_holder = document.createComment('');
   private prop!: string[];
   private task = Promise.resolve();
   private template?: Element;
-  private updating?: true;
   $scope?: lmvc_scope;
   $value?: string;
 }
