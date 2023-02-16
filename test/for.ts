@@ -26,7 +26,7 @@ describe('l:for view', () => {
         expect(y.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(1);
         for(let x = 0; x < y.childNodes.length; ++x) {
           const i = y.childNodes.item(x);
-          expect(i instanceof Comment || i instanceof Text, 'unexpected rendered element').is.true;
+          expect(i instanceof Comment || i instanceof Text, 'unexpected initial rendered element').is.true;
         }
         const assert_all = async (z: Element) => {
           await $model.after_dispatch;
@@ -37,9 +37,10 @@ describe('l:for view', () => {
             const i = z.childNodes.item(x);
             expect(i instanceof Comment || i instanceof Text || i instanceof HTMLDivElement, 'unexpected rendered element').is.true;
             if(i instanceof HTMLDivElement) {
+              console.debug({ cnt, txt: i.innerText })
               expect(i.innerText, 'text not rendered').contains(model.forloop);
-              expect(i.innerText.endsWith(cnt.toString()), 'leaf not rendered correctly').is.true;
-              expect(i.innerText.startsWith(model.item.values[cnt]), 'leaf not rendered correctly').is.true;
+              expect(i.innerText.endsWith(cnt.toString()), 'leaf did not render ending').is.true;
+              expect(i.innerText.startsWith(model.item.values[cnt]), 'leaf did not render begining').is.true;
               ++cnt;
             }
           }
@@ -75,7 +76,7 @@ describe('l:for view', () => {
         expect(y.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(1);
         for(let x = 0; x < y.childNodes.length; ++x) {
           const i = y.childNodes.item(x);
-          expect(i instanceof Comment || i instanceof Text, 'unexpected rendered element').is.true;
+          expect(i instanceof Comment || i instanceof Text, 'unexpected initial rendered element').is.true;
         }
         const assert_all = async (z: Element) => {
           await $model.after_dispatch;

@@ -28,12 +28,12 @@ export class lmvc_app implements lmvc_app_t {
     if(document.body.parentNode !== null) {
       const views = new Set<lmvc_view>();
       views.add(ctlr);
-      ctlr.$model = $model.make_model(ctlr.$model || {});
-      ctlr.$scope = await this.load_scope(document.body.parentNode, ctlr, views);
+      (<mutable_controller>ctlr).$model = $model.make_model(ctlr.$model || {});
+      (<mutable_view>ctlr).$scope = await this.load_scope(document.body.parentNode, ctlr, views);
       lmvc_app.subscribe_to_model(<controller_t>ctlr);
-      await this.load_descendants(ctlr.$scope.node, ctlr, views);
+      await this.load_descendants(ctlr.$scope!.node, ctlr, views);
       await $view.init_views(Array.from(views));
-      await $view.invoke_method('$mount', this.get_scope_views_self_and_descendant(ctlr.$scope), x => x.$is_ready === true);
+      await $view.invoke_method('$mount', this.get_scope_views_self_and_descendant(ctlr.$scope!), x => x.$is_ready === true);
       $model.get_subject(ctlr.$model)?.next();
     }
     return ctlr;
@@ -84,7 +84,7 @@ export class lmvc_app implements lmvc_app_t {
   find_all_scopes(node: Node) {
     const rt: lmvc_scope[] = [];
     for(let scope of this.scope) {
-      if(node.contains(scope.node) || (scope.view.some(x => (<any>x).place_holder && node.contains((<any>x).place_holder)))) {
+      if(node.contains(scope.node) || (scope.view.some(x => (<has_place_holder>x).place_holder && node.contains((<has_place_holder>x).place_holder)))) {
         rt.push(scope);
       }
     }
@@ -94,7 +94,7 @@ export class lmvc_app implements lmvc_app_t {
   find_scope(node: Node) {
     const rt: lmvc_scope[] = [];
     for(let scope of this.scope) {
-      if(scope.node === node || (scope.view.some(x => (<any>x).place_holder === node))) {
+      if(scope.node === node || (scope.view.some(x => (<has_place_holder>x).place_holder === node))) {
         rt.push(scope);
       }
     }
@@ -156,6 +156,12 @@ export class lmvc_app implements lmvc_app_t {
       template: node.cloneNode(),
       view: []
     };
+    if(rt.controller) {
+      (<mutable_controller>rt.controller).$model = $model.make_model(rt.controller.$model || {});
+      if(!rt.controller.$view) {
+        (<mutable_controller>rt.controller).$view = [];
+      }
+    }
     let is_root: true | undefined;
     if(!views) {
       is_root = true;
@@ -177,7 +183,7 @@ export class lmvc_app implements lmvc_app_t {
               rt.view.push(view);
               views.add(view);
               rt.controller.$view.push(view);
-              view.$scope = rt;
+              (<mutable_view>view).$scope = rt;
               view.$arg = match.input.slice(match[0].length + 1);
               view.$value = item.value;
               if($controller.is_controller(view)) {
@@ -193,7 +199,7 @@ export class lmvc_app implements lmvc_app_t {
           }
         }
         if(ctlr) {
-          ctlr.$model = $model.make_model(ctlr.$model || {});
+          (<mutable_controller>ctlr).$model = $model.make_model(ctlr.$model || {});
           let node = await $controller.get_controller_html(ctlr);
           if(node && Array.isArray(node) && node.length) {
             if(node.length > 1) {
@@ -257,9 +263,6 @@ export class lmvc_app implements lmvc_app_t {
         }
       }
     }
-    if(rt.controller) {
-      rt.controller.$model = $model.make_model(rt.controller.$model || {});
-    }
     if(is_root) {
       for(let x of rt.view) {
         views.add(x);
@@ -273,10 +276,16 @@ export class lmvc_app implements lmvc_app_t {
   }
 
   static subscribe_to_model(ctlr: controller_t) {
+    console.assert(ctlr.$sub === undefined);
     ctlr.$sub = $model.get_subject(ctlr.$model)?.subscribe({
       next: x => {
         for(let y of [ctlr!, ...ctlr!.$view].filter(y => typeof y.$model_changed === 'function')) {
-          y.$model_changed!(x);
+          try {
+            y.$model_changed!(x);            
+          }
+          catch(ex) {
+            console.error(ex);
+          }
         }
       }
     });
@@ -331,4 +340,7 @@ export class lmvc_app implements lmvc_app_t {
 }
 
 type controller_t = lmvc_controller & { $sub?: Unsubscribable };
+type has_place_holder = { place_holder: Comment; };
+type mutable_controller = { $model: unknown; $view: lmvc_view[]; };
+type mutable_view = { $scope?: lmvc_scope; };
 export default new lmvc_app();

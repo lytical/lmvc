@@ -62,7 +62,7 @@ export interface lmvc_app {
 export interface lmvc_scope<_t_ = lmvc_model> {
   app: lmvc_app;
   args?: string | string[];
-  controller: lmvc_controller<_t_>;
+  readonly controller: lmvc_controller<_t_>;
   node: Node;
   parent?: lmvc_scope;
   template: Node;
@@ -124,7 +124,7 @@ export interface lmvc_view<_t_ = lmvc_model> {
    * the associated scope.
    * this member is available for the entire life, after $create
    */
-  $scope?: lmvc_scope<_t_>;
+  readonly $scope?: lmvc_scope<_t_>;
 
   /**
    * the dom attribute value.
@@ -135,8 +135,8 @@ export interface lmvc_view<_t_ = lmvc_model> {
 export interface lmvc_controller<_m_ = lmvc_model, _t_ = lmvc_model> extends lmvc_view<_t_> {
   $can_leave?(): boolean | Promise<boolean>;
   $get_title?(): string | Promise<string>;
-  $model: _m_;
-  $view: lmvc_view<_m_>[];
+  readonly $model: _m_;
+  readonly $view: lmvc_view<_m_>[];
 }
 
 /**

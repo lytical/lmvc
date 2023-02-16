@@ -10,7 +10,6 @@ import { lmvc_eval } from './eval';
 @view()
 export class lmvc_text extends lmvc_eval {
   protected update(value: any) {
-    console.debug({ [(<Element>this.$scope!.node).id]: value });
     (<Element>this.$scope!.node).textContent = value?.toString();
   }
 }
