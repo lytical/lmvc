@@ -52,7 +52,8 @@ export abstract class lmvc_eval implements lmvc_view {
         this.update(value, evt, this.$arg);
       }
       catch(ex) {
-        console.error(ex);
+        console.error({ class: Object.getPrototypeOf(this).constructor?.name, ex });
+        this.update(undefined, evt, this.$arg);
       }
     }
   }
