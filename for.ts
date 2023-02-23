@@ -72,9 +72,8 @@ export class lmvc_for implements lmvc_view {
         }
       }
       else if(this.list.length < this.leaf_ub) {
-        for(--this.leaf_ub; this.leaf_ub >= this.list.length; --this.leaf_ub) {
-          console.assert(this.leaf[this.leaf_ub].node.parentElement !== null);
-          this.place_holder.parentElement!.removeChild(this.leaf[this.leaf_ub].node);
+        while(this.leaf_ub > this.list.length) {
+          this.place_holder.parentElement!.removeChild(this.leaf[--this.leaf_ub].node);
         }
       }
       for(let leaf of this.leaf) {
@@ -158,12 +157,19 @@ export class lmvc_for implements lmvc_view {
               this.func = Function(`"use strict";return(function(${this.prop}){"use strict";return(${statement.map(x => x.value).join('')});})`)();
               this.template = <Element>this.$scope!.template.cloneNode(true);
               this.template.removeAttribute('l:for');
-              return;
+            }
+            for(let x of this.$scope!.view) {
+              if(x !== this) {
+                const i = this.$scope!.controller.$view.indexOf(x);
+                console.assert(i !== -1);
+                this.$scope!.controller.$view.splice(i, 1);
+              }
             }
           }
           else {
             console.error('l:for missing "of" or "in" operator');
           }
+          return;
         }
       }
     }

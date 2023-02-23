@@ -37,11 +37,15 @@ describe('l:for view', () => {
             const i = z.childNodes.item(x);
             expect(i instanceof Comment || i instanceof Text || i instanceof HTMLDivElement, 'unexpected rendered element').is.true;
             if(i instanceof HTMLDivElement) {
-              console.debug({ cnt, txt: i.innerText })
-              expect(i.innerText, 'text not rendered').contains(model.forloop);
-              expect(i.innerText.endsWith(cnt.toString()), 'leaf did not render ending').is.true;
-              expect(i.innerText.startsWith(model.item.values[cnt]), 'leaf did not render begining').is.true;
-              ++cnt;
+              try {
+                expect(i.innerText, 'text not rendered').contains(model.forloop);
+                expect(i.innerText.endsWith(cnt.toString()), 'leaf did not render ending').is.true;
+                expect(i.innerText.startsWith(model.item.values[cnt]), 'leaf did not render begining').is.true;
+                ++cnt;
+              } catch(ex) {
+                console.error(ex);
+                throw ex;
+              }
             }
           }
           expect(cnt).equals(model.item.values.length, 'failed to render all leaves');
