@@ -8,6 +8,8 @@ import { tokenize } from 'esprima';
 import { $view, view } from './view';
 import type { lmvc_controller, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
 
+let _cnt = 0;
+
 @view()
 export class lmvc_for implements lmvc_view {
   private get_items() {
@@ -20,6 +22,7 @@ export class lmvc_for implements lmvc_view {
   }
 
   private async do_render(evt: lmvc_model_event[]) {
+    const cnt = ++_cnt;
     const parent = this.place_holder.parentElement;
     if(parent) {
       this.list = this.get_items();
@@ -61,10 +64,11 @@ export class lmvc_for implements lmvc_view {
               if(views.size) {
                 await this.$scope!.app.load_descendants(leaf.node, leaf.controller, views);
                 await $view.init_views(Array.from(views));
-                this.place_holder.parentElement!.insertBefore(leaf.node, this.place_holder);
               }
+              this.place_holder.parentElement!.insertBefore(leaf.node, this.place_holder);
             }
             else {
+              if(this.$value === 'item of list') console.debug({ enter: true, cnt, evt });
               console.assert(false, 'unexpected');
             }
             this.leaf[this.leaf_ub] = leaf!;

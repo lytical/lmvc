@@ -153,7 +153,7 @@ export class lmvc_app implements lmvc_app_t {
       app: this,
       controller,
       node,
-      template: node.cloneNode(),
+      template: node.cloneNode(true),
       view: []
     };
     if(rt.controller) {
