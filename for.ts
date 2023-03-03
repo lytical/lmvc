@@ -64,7 +64,6 @@ export class lmvc_for implements lmvc_view {
               this.place_holder.parentElement!.insertBefore(leaf.node, this.place_holder);
             }
             else {
-              if(this.$value === 'item of list') console.debug({ enter: true, evt });
               console.assert(false, 'unexpected');
             }
             this.leaf[this.leaf_ub] = leaf!;
