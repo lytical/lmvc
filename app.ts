@@ -281,9 +281,13 @@ export class lmvc_app implements lmvc_app_t {
     console.assert(ctlr.$sub === undefined);
     ctlr.$sub = $model.get_subject(ctlr.$model)?.subscribe({
       next: x => {
+        const body = window.document.body;
         for(let y of [ctlr!, ...ctlr!.$view].filter(y => typeof y.$model_changed === 'function')) {
           try {
-            y.$model_changed!(x);            
+            const node = y.$scope!.node;
+            if((body.contains(node) || ((<has_place_holder>y).place_holder && body.contains((<has_place_holder>y).place_holder)))) {
+              y.$model_changed!(x);
+            }
           }
           catch(ex) {
             console.error(ex);
