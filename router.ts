@@ -159,7 +159,7 @@ export class lmvc_router_imp implements lmvc_router {
         let rt: lmvc_scope | undefined;
         let node = this.create_node(id);
         try {
-          rt = await this.$scope!.app.load_scope(node.cloneNode(), this.$scope!.controller);
+          rt = await this.$scope!.app.load_scope(node.cloneNode(true), this.$scope!.controller);
           if(rt.view.length === 0) {
             throw new Error('not-found');
           }
@@ -177,7 +177,7 @@ export class lmvc_router_imp implements lmvc_router {
           }
           try {
             node = this.create_node(id + ':main');
-            rt = await this.$scope!.app.load_scope(node.cloneNode(), this.$scope!.controller);
+            rt = await this.$scope!.app.load_scope(node.cloneNode(true), this.$scope!.controller);
             if(rt.view.length === 0) {
               throw new Error('not-found');
             }

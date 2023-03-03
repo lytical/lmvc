@@ -33,6 +33,7 @@ describe('l:for view', () => {
           await fixture.timeout(10);
           expect(z.childNodes.length, 'expected at least a comment element').greaterThanOrEqual(model.item.values.length);
           let cnt = 0;
+          console.debug(z.childNodes.length);
           for(let x = 0; x < z.childNodes.length; ++x) {
             const i = z.childNodes.item(x);
             expect(i instanceof Comment || i instanceof Text || i instanceof HTMLDivElement, 'unexpected rendered element').is.true;

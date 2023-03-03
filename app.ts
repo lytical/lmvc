@@ -31,7 +31,6 @@ export class lmvc_app implements lmvc_app_t {
       (<mutable_controller>ctlr).$model = $model.make_model(ctlr.$model || {});
       (<mutable_view>ctlr).$scope = await this.load_scope(document.body.parentNode, ctlr, views);
       lmvc_app.subscribe_to_model(<controller_t>ctlr);
-      await this.load_descendants(ctlr.$scope!.node, ctlr, views);
       await $view.init_views(Array.from(views));
       await $view.invoke_method('$mount', this.get_scope_views_self_and_descendant(ctlr.$scope!), x => x.$is_ready === true);
       $model.get_subject(ctlr.$model)?.next();
@@ -260,6 +259,9 @@ export class lmvc_app implements lmvc_app_t {
           }
           await this.load_descendants(rt.node, ctlr, views);
           lmvc_app.subscribe_to_model(ctlr);
+        }
+        else {
+          await this.load_descendants(rt.node, rt.controller, views);
         }
       }
     }
