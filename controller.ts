@@ -5,11 +5,11 @@
 */
 
 import { $view, view } from './view';
-import type { lmvc_controller_metedata_arg } from './type';
+import type { lmvc_controller_metedata_arg_t } from './type';
 
 export class $controller {
   static async get_controller_html(arg: any) {
-    const md = <lmvc_controller_metedata_arg | undefined>$view.get_view_metadata(arg);
+    const md = <lmvc_controller_metedata_arg_t | undefined>$view.get_view_metadata(arg);
     let rs = typeof md?.html === 'function' ? md.html(arg) : md?.html;
     while(rs) {
       if(Array.isArray(rs)) {
@@ -26,7 +26,7 @@ export class $controller {
   }
 
   static is_controller(arg: any) {
-    return (<lmvc_controller_metedata_arg | undefined>$view.get_view_metadata(arg))?.html !== undefined;
+    return (<lmvc_controller_metedata_arg_t | undefined>$view.get_view_metadata(arg))?.html !== undefined;
   }
 
   static async load_html(url: string): Promise<Node[]> {
@@ -74,7 +74,7 @@ export class $controller {
   }
 }
 
-export function controller(args: lmvc_controller_metedata_arg = { html: null }) {
+export function controller(args: lmvc_controller_metedata_arg_t = { html: null }) {
   if(typeof args.html === 'string') {
     args.html = $controller.load_html(args.html);
   }

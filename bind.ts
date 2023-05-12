@@ -6,10 +6,10 @@
 
 import { view } from './view';
 import obj_util from '../common/obj-util';
-import type { lmvc_model_event, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_model_event_t, lmvc_scope_t, lmvc_view_t } from './type';
 
 @view()
-export class lmvc_bind implements lmvc_view {
+export class lmvc_bind implements lmvc_view_t {
   constructor() {
     this.on_input_handler = lmvc_bind.prototype.on_input.bind(this);
   }
@@ -59,7 +59,7 @@ export class lmvc_bind implements lmvc_view {
     }
   }
 
-  $model_changed(_evt: lmvc_model_event[]): void {
+  $model_changed(_evt: lmvc_model_event_t[]): void {
     if(this.updating) {
       this.updating = undefined;
     }
@@ -81,7 +81,7 @@ export class lmvc_bind implements lmvc_view {
   }
 
   $arg?: string;
-  $scope?: lmvc_scope;
+  $scope?: lmvc_scope_t;
   $value?: string;
   private on_input_handler?: (evt: InputEvent) => void;
   private prop?: string[];

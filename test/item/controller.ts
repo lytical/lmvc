@@ -5,14 +5,14 @@
 */
 
 import { controller } from '../../controller';
-import type { lmvc_controller, lmvc_model } from '../../type';
+import type { lmvc_controller_t, lmvc_model_t } from '../../type';
 
-interface model extends lmvc_model {
+interface model extends lmvc_model_t {
   text?: string;
 }
 
 @controller({ html: 'lmvc/test/item/controller.html' })
-export class lmvc_test_controller implements lmvc_controller<model> {
+export class lmvc_test_controller implements lmvc_controller_t<model> {
   async $create() {
     this.created = true;
   }

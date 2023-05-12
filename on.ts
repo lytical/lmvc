@@ -6,10 +6,10 @@ please refer to your license agreement on the use of this file.
 
 import { view } from './view';
 import { tokenize } from 'esprima';
-import type { lmvc_scope, lmvc_view } from './type';
+import type { lmvc_scope_t, lmvc_view_t } from './type';
 
 @view()
-export class lmvc_on implements lmvc_view {
+export class lmvc_on implements lmvc_view_t {
   async $init() {
     let arg = typeof this.$arg === 'string' ? decodeURI(this.$arg) : undefined;
     if(arg) {
@@ -77,7 +77,7 @@ export class lmvc_on implements lmvc_view {
   }
 
   $arg?: string;
-  $scope?: lmvc_scope;
+  $scope?: lmvc_scope_t;
   $value?: string;
   private evt_handler?: EventListener;
   private evt_nm?: string[];

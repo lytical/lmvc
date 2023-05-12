@@ -5,10 +5,10 @@
 */
 
 import { $view, view } from './view';
-import type { lmvc_controller, lmvc_controller_metedata_arg, lmvc_router, lmvc_scope } from './type';
+import type { lmvc_controller_t, lmvc_controller_metedata_arg_t, lmvc_router_t, lmvc_scope_t } from './type';
 
 @view()
-export class lmvc_router_imp implements lmvc_router {
+export class lmvc_router_imp implements lmvc_router_t {
   constructor() {
     this.base_url += (this.base_url.endsWith('/') ? '#' : '/#');
     this.popstate_handler = lmvc_router_imp.prototype.on_popstate.bind(this);
@@ -60,7 +60,7 @@ export class lmvc_router_imp implements lmvc_router {
     if(this.current !== -1) {
       let scope = this.route[this.current];
       if(scope) {
-        let ctlr = <lmvc_controller>scope.view[0];
+        let ctlr = <lmvc_controller_t>scope.view[0];
         if(typeof ctlr.$can_leave === 'function') {
           let rs = ctlr.$can_leave();
           if(typeof rs === 'object' && typeof rs.then === 'function') {
@@ -127,7 +127,7 @@ export class lmvc_router_imp implements lmvc_router {
     return true;
   }
 
-  private async load(path: string): Promise<lmvc_scope | undefined> {
+  private async load(path: string): Promise<lmvc_scope_t | undefined> {
     this.place_holder.parentElement?.insertBefore(this.content!, this.place_holder);
     try {
       for(let item of this.rest) {
@@ -156,7 +156,7 @@ export class lmvc_router_imp implements lmvc_router {
         if(this.skip.has(id)) {
           continue;
         }
-        let rt: lmvc_scope | undefined;
+        let rt: lmvc_scope_t | undefined;
         let node = this.create_node(id);
         try {
           rt = await this.$scope!.app.load_scope(node.cloneNode(true), this.$scope!.controller);
@@ -195,8 +195,8 @@ export class lmvc_router_imp implements lmvc_router {
             continue;
           }
         }
-        const ctlr = <lmvc_controller>rt.view[0];
-        const md = <lmvc_controller_metedata_arg | undefined>$view.get_view_metadata(ctlr);
+        const ctlr = <lmvc_controller_t>rt.view[0];
+        const md = <lmvc_controller_metedata_arg_t | undefined>$view.get_view_metadata(ctlr);
         if(md && Array.isArray(md.rest)) {
           let required = md.rest.findIndex(x => typeof x !== 'string' && x.is_optional);
           if((required === -1 && md.rest.length <= (segment.length - idx)) || (required > 0 && required < (segment.length - idx))) {
@@ -286,7 +286,7 @@ export class lmvc_router_imp implements lmvc_router {
   }
 
   private async set_window_title() {
-    const ctlr = <lmvc_controller | undefined>this.route[this.current].view[0];
+    const ctlr = <lmvc_controller_t | undefined>this.route[this.current].view[0];
     if(ctlr && typeof ctlr.$get_title === 'function') {
       let rs = ctlr.$get_title();
       if(typeof rs === 'object' && typeof rs.then === 'function') {
@@ -310,7 +310,7 @@ export class lmvc_router_imp implements lmvc_router {
   private async unmount_current() {
     let scope = this.route[this.current];
     if(scope) {
-      let ctlr = <lmvc_controller>scope.view[0];
+      let ctlr = <lmvc_controller_t>scope.view[0];
       if(typeof ctlr.$can_leave === 'function') {
         let rs = ctlr.$can_leave();
         if(!(typeof rs === 'object' && typeof rs.then === 'function' ? await rs : rs)) {
@@ -370,9 +370,9 @@ export class lmvc_router_imp implements lmvc_router {
   private place_holder = document.createComment('');
   private popstate_handler: (evt: PopStateEvent) => any;
   private rest: { pattern: RegExp, node: HTMLDivElement, rest: string[] }[] = [];
-  private route: lmvc_scope[] = [];
+  private route: lmvc_scope_t[] = [];
   private skip = new Set<string>();
   private task = Promise.resolve();
-  $scope?: lmvc_scope;
+  $scope?: lmvc_scope_t;
   $value?: string;
 }

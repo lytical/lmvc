@@ -8,17 +8,17 @@ import { lmvc_eval } from './eval';
 import { view } from './view';
 import { $controller } from './controller';
 import obj_util from 'common/obj-util';
-import type { lmvc_model, lmvc_controller } from './type';
+import type { lmvc_model_t, lmvc_controller_t } from './type';
 
 @view()
 export class lmvc_prop extends lmvc_eval {
   $ready() {
     const ctlr = this.$scope!.view.filter(x => $controller.is_controller(x));
     if(ctlr.length) {
-      this.target = (<lmvc_controller>ctlr[0]).$model;
+      this.target = (<lmvc_controller_t>ctlr[0]).$model;
     }
     else {
-      console.warn(`(l:prop:${this.$arg}) failed to locate the controller in scope.`);
+      console.warn(`(l:prop:${this.$arg}) failed to locate the controller in scope.\n${(<Element | undefined>this.$scope?.template)?.outerHTML}`);
     }
     return super.$ready();
   }
@@ -36,5 +36,5 @@ export class lmvc_prop extends lmvc_eval {
     }
   }
 
-  target?: lmvc_model;
+  target?: lmvc_model_t;
 }

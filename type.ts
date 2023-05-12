@@ -4,15 +4,15 @@
   please refer to your license agreement on the use of this file.
 */
 
-import type { __cstor } from 'common/plain-object';
+import type { __cstor_t } from 'common/plain-object';
 import type { Subscribable } from 'rxjs';
 
-export interface lmvc_app {
+export interface lmvc_app_t {
   /**
    * @description create an instance of the view specified
    * @param id the identifier of the view.
    */
-  create_view_instance(id: string): Promise<lmvc_view>;
+  create_view_instance(id: string): Promise<lmvc_view_t>;
   /**
    * @description destroys the specified node by removing the node and disposing all scopes from it and the its descendants.
    * @param node the node to destroy.
@@ -22,54 +22,54 @@ export interface lmvc_app {
    * @description destoy the specified scope by removing the associated node and disposing 
    * @param scope
    */
-  destroy_scope(scope: lmvc_scope): Promise<void>;
+  destroy_scope(scope: lmvc_scope_t): Promise<void>;
   /**
    * 
    * @param node 
    */
-  find_all_scopes(node: Node): lmvc_scope[];
+  find_all_scopes(node: Node): lmvc_scope_t[];
   /**
    * 
    * @param node 
    */
-  find_scope(node: Node): lmvc_scope[];
-  /**
-   * 
-   * @param node 
-   * @param controller 
-   * @param views 
-   */
-  load_descendants(node: Node, controller: lmvc_controller, views?: Set<lmvc_view>): Promise<lmvc_scope[]>;
+  find_scope(node: Node): lmvc_scope_t[];
   /**
    * 
    * @param node 
    * @param controller 
    * @param views 
    */
-  load_scope(node: Node, controller: lmvc_controller, views?: Set<lmvc_view>): Promise<lmvc_scope>;
+  load_descendants(node: Node, controller: lmvc_controller_t, views?: Set<lmvc_view_t>): Promise<lmvc_scope_t[]>;
+  /**
+   * 
+   * @param node 
+   * @param controller 
+   * @param views 
+   */
+  load_scope(node: Node, controller: lmvc_controller_t, views?: Set<lmvc_view_t>): Promise<lmvc_scope_t>;
   /**
    * 
    * @param id 
    * @param cstor 
    */
-  register_view(id: string, cstor: Promise<__cstor<lmvc_view>>): void;
+  register_view(id: string, cstor: Promise<__cstor_t<lmvc_view_t>>): void;
   /**
    * 
    */
-  router?: lmvc_router;
+  router?: lmvc_router_t;
 }
 
-export interface lmvc_scope<_t_ = lmvc_model> {
-  app: lmvc_app;
+export interface lmvc_scope_t<_t_ = lmvc_model_t> {
+  app: lmvc_app_t;
   args?: string | string[];
-  readonly controller: lmvc_controller<_t_>;
+  readonly controller: lmvc_controller_t<_t_>;
   node: Node;
-  parent?: lmvc_scope;
+  parent?: lmvc_scope_t;
   template: Node;
-  view: lmvc_view<_t_>[];
+  view: lmvc_view_t<_t_>[];
 }
 
-export interface lmvc_view<_t_ = lmvc_model> {
+export interface lmvc_view_t<_t_ = lmvc_model_t> {
   /**
    * provides a way to asynchronously complete the creation of the view.
    * this is the first method called after a view's constructor.
@@ -90,7 +90,7 @@ export interface lmvc_view<_t_ = lmvc_model> {
   /**
    * an optional method that's invoked after the model has changed.
    */
-  $model_changed?(evt: lmvc_model_event[]): void;
+  $model_changed?(evt: lmvc_model_event_t[]): void;
 
   /**
    * an optional method that's invoked when the view instance is placed in the dom.
@@ -124,7 +124,7 @@ export interface lmvc_view<_t_ = lmvc_model> {
    * the associated scope.
    * this member is available for the entire life, after $create
    */
-  readonly $scope?: lmvc_scope<_t_>;
+  readonly $scope?: lmvc_scope_t<_t_>;
 
   /**
    * the dom attribute value.
@@ -132,22 +132,22 @@ export interface lmvc_view<_t_ = lmvc_model> {
   $value?: unknown;
 }
 
-export interface lmvc_controller<_m_ = lmvc_model, _t_ = lmvc_model> extends lmvc_view<_t_> {
+export interface lmvc_controller_t<_m_ = lmvc_model_t, _t_ = lmvc_model_t> extends lmvc_view_t<_t_> {
   $can_leave?(): boolean | Promise<boolean>;
   $get_title?(): string | Promise<string>;
   readonly $model: _m_;
-  readonly $view: lmvc_view<_m_>[];
+  readonly $view: lmvc_view_t<_m_>[];
 }
 
 /**
  * a model encapsulates the data and related methods. it is usually created by the controller.
  */
-export type lmvc_model = Record<string | number | symbol, unknown>;
+export type lmvc_model_t = Record<string | number | symbol, unknown>;
 
 /**
  * when a model has been modified, an event is fired and the details of the modification are provided by this instance.
  */
-export interface lmvc_model_event {
+export interface lmvc_model_event_t {
   /**
    * the model instance that the change has occured.
    */
@@ -169,7 +169,7 @@ export interface lmvc_model_event {
 /**
  * the subject interface of the model, used to subscribe to, and or broadcast model events.
  */
-export interface lmvc_model_subject extends Subscribable<lmvc_model_event[]> {
+export interface lmvc_model_subject_t extends Subscribable<lmvc_model_event_t[]> {
   /**
    * get the underlying object
    */
@@ -177,18 +177,18 @@ export interface lmvc_model_subject extends Subscribable<lmvc_model_event[]> {
   /**
    * broadcast the provided model event(s) to all subscribers (views).
    */
-  next(...msg: lmvc_model_event[]): lmvc_model_event[];
+  next(...msg: lmvc_model_event_t[]): lmvc_model_event_t[];
 }
 
-export interface lmvc_router extends lmvc_view {
+export interface lmvc_router_t extends lmvc_view_t {
   push(path: string): Promise<boolean>;
   replace(path: string): Promise<boolean>;
 }
 
-export interface lmvc_view_metadata_arg {
+export interface lmvc_view_metadata_arg_t {
 }
 
-export interface lmvc_controller_metedata_arg extends lmvc_view_metadata_arg {
-  html: string | null | Node[] | Promise<Node[]> | ((ctx: lmvc_controller) => Node[] | string | null | Promise<Node[] | string | null>);
+export interface lmvc_controller_metedata_arg_t extends lmvc_view_metadata_arg_t {
+  html: string | null | Node[] | Promise<Node[]> | ((ctx: lmvc_controller_t) => Node[] | string | null | Promise<Node[] | string | null>);
   rest?: (string | { id: string, is_optional?: true })[];
 }

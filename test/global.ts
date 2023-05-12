@@ -6,7 +6,7 @@
 
 import { expect } from 'chai';
 import lmvc_app from '../app';
-import type { lmvc_controller } from 'lmvc/type';
+import type { lmvc_controller_t } from 'lmvc/type';
 
 after(() => {
 });
@@ -48,6 +48,6 @@ export class fixture {
 const after_bootstrap: ((ctlr: root_controller) => Promise<any> | void)[] = [];
 const before_bootstrap: ((ctlr: root_controller) => Promise<any> | void)[] = [];
 
-export interface root_controller extends lmvc_controller {
+export interface root_controller extends lmvc_controller_t {
   on_load?: (e?: Event, v?: string | number) => void;
 }

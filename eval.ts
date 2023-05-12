@@ -6,9 +6,9 @@
 
 import { tokenize } from 'esprima';
 import obj_util from '../common/obj-util';
-import type { lmvc_model_event, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_model_event_t, lmvc_scope_t, lmvc_view_t } from './type';
 
-export abstract class lmvc_eval implements lmvc_view {
+export abstract class lmvc_eval implements lmvc_view_t {
   $init() {
     if(this.$value) {
       this.$arg = typeof this.$arg === 'string' ? decodeURI(this.$arg) : undefined;
@@ -42,7 +42,7 @@ export abstract class lmvc_eval implements lmvc_view {
     }
   }
 
-  $model_changed(evt: lmvc_model_event[]): void {
+  $model_changed(evt: lmvc_model_event_t[]): void {
     if(this.func) {
       try {
         const value = this.func.apply(undefined, this.prop.map(x => {
@@ -70,10 +70,10 @@ export abstract class lmvc_eval implements lmvc_view {
     }
   }
 
-  protected abstract update(value: any, msg: lmvc_model_event[], arg?: string): void;
+  protected abstract update(value: any, msg: lmvc_model_event_t[], arg?: string): void;
 
   $arg?: string;
-  $scope?: lmvc_scope;
+  $scope?: lmvc_scope_t;
   $value?: string;
   func?: Function;
   prop!: string[];

@@ -6,10 +6,10 @@ please refer to your license agreement on the use of this file.
 
 import { tokenize } from 'esprima';
 import { $view, view } from './view';
-import type { lmvc_controller, lmvc_model_event, lmvc_scope, lmvc_view } from './type';
+import type { lmvc_controller_t, lmvc_model_event_t, lmvc_scope_t, lmvc_view_t } from './type';
 
 @view()
-export class lmvc_for implements lmvc_view {
+export class lmvc_for implements lmvc_view_t {
   private get_items() {
     const model = this.$scope!.controller.$model;
     const item: unknown[] | object | undefined | null = this.func!.apply(undefined, this.prop.map(x => {
@@ -19,13 +19,13 @@ export class lmvc_for implements lmvc_view {
     return <unknown[]>(item ? (this.op_is_in === true ? Object.keys(item || {}) : item || []) : []);
   }
 
-  private async do_render(evt: lmvc_model_event[]) {
+  private async do_render(evt: lmvc_model_event_t[]) {
     const parent = this.place_holder.parentElement;
     if(parent) {
       this.list = this.get_items();
       if(this.list.length > this.leaf_ub) {
         for(; this.leaf_ub < this.list.length; ++this.leaf_ub) {
-          let leaf: lmvc_scope | undefined = this.leaf[this.leaf_ub];
+          let leaf: lmvc_scope_t | undefined = this.leaf[this.leaf_ub];
           if(leaf) {
             console.assert(leaf.node.parentElement === null);
             this.place_holder.parentElement!.insertBefore(leaf.node, this.place_holder);
@@ -47,7 +47,7 @@ export class lmvc_for implements lmvc_view {
               });
             }
             Object.setPrototypeOf(model, this.$scope!.controller.$model);
-            const controller: lmvc_controller = {
+            const controller: lmvc_controller_t = {
               get $model() {
                 return model;
               },
@@ -55,7 +55,7 @@ export class lmvc_for implements lmvc_view {
               set $model(_: any) { },
               $view: []
             };
-            const views = new Set<lmvc_view>();
+            const views = new Set<lmvc_view_t>();
             leaf = await this.$scope!.app.load_scope(this.template!.cloneNode(true), controller, views);
             if(leaf) {
               if(views.size) {
@@ -175,7 +175,7 @@ export class lmvc_for implements lmvc_view {
     console.error(`l:for invalid statement "${this.$value}")".`);
   }
 
-  $model_changed(evt: lmvc_model_event[]): void {
+  $model_changed(evt: lmvc_model_event_t[]): void {
     if((!evt.length || evt.some(x => this.prop.some(y => x.property == y || (typeof x.property === 'string' && x.property.startsWith(y))))) && this.func) {
       if(this.governor) {
         clearTimeout(this.governor);
@@ -203,7 +203,7 @@ export class lmvc_for implements lmvc_view {
   private governor?: number;
   private idx_nm?: string;
   private item_nm?: string;
-  private leaf: lmvc_scope[] = [];
+  private leaf: lmvc_scope_t[] = [];
   private leaf_ub = 0;
   private list: unknown[] = [];
   private op_is_in?: boolean;
@@ -211,6 +211,6 @@ export class lmvc_for implements lmvc_view {
   private prop!: string[];
   private task = Promise.resolve();
   private template?: Element;
-  $scope?: lmvc_scope;
+  $scope?: lmvc_scope_t;
   $value?: string;
 }

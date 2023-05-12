@@ -6,9 +6,9 @@ please refer to your license agreement on the use of this file.
 
 import { expect } from 'chai';
 import test_app from '../app';
-import type { lmvc_scope } from '../type';
+import type { lmvc_scope_t } from '../type';
 
-let z: lmvc_scope[] | undefined;
+let z: lmvc_scope_t[] | undefined;
 
 describe('an app instance', () => {
   it('can bootstrap the application', async () => {

@@ -7,9 +7,9 @@
 import { future } from '../common/future';
 import { parseScript } from 'esprima';
 import { Subject } from 'rxjs';
-import type { lmvc_model_event, lmvc_model_subject } from './type';
+import type { lmvc_model_event_t, lmvc_model_subject_t } from './type';
 
-const governor = new Map<Subject<lmvc_model_event[]>, lmvc_model_event[]>();
+const governor = new Map<Subject<lmvc_model_event_t[]>, lmvc_model_event_t[]>();
 
 const is_proxy_metadata: unique symbol = Symbol('l-mvc-is-proxy-metadata');
 
@@ -22,7 +22,7 @@ const $mvc_model_subject: unique symbol = Symbol('l-mvc-model-subject');
  * utility static class providing model related methods.
  */
 export class $model {
-  private static create_model<_t_>(data: _t_, subject: Subject<lmvc_model_event[] & { timeout?: number; }>, prefix: string = ''): _t_ {
+  private static create_model<_t_>(data: _t_, subject: Subject<lmvc_model_event_t[] & { timeout?: number; }>, prefix: string = ''): _t_ {
     const map: Record<string, string[] | Set<string>> = {};
     for(let obj = data; obj; obj = Object.getPrototypeOf(obj)) {
       for(let nm of Object.getOwnPropertyNames(obj)) {
@@ -49,12 +49,12 @@ export class $model {
     for(let x in map) {
       map[x] = Array.from(map[x]);
     }
-    const view = <lmvc_model_subject & { subject: Subject<lmvc_model_event[]> }>{
+    const view = <lmvc_model_subject_t & { subject: Subject<lmvc_model_event_t[]> }>{
       get_underlying() {
         return data;
       },
-      next(...msg: lmvc_model_event[]) {
-        let queue: lmvc_model_event[] & { timeout?: number; };
+      next(...msg: lmvc_model_event_t[]) {
+        let queue: lmvc_model_event_t[] & { timeout?: number; };
         if(governor.has(subject)) {
           queue = governor.get(subject)!;
           queue.push(...msg);
@@ -85,7 +85,7 @@ export class $model {
     };
     let proxy: ProxyConstructor;
     const notify = (target: any, property: string | symbol | number, prev: unknown, value: unknown) => {
-      const evt: lmvc_model_event = {
+      const evt: lmvc_model_event_t = {
         property: typeof property !== 'symbol' ? `${prefix}${property}` : property,
         model: proxy,
         prev,
@@ -93,7 +93,7 @@ export class $model {
       };
       const queue = view.next(evt);
       if(typeof property === 'string' && map[property]) {
-        queue.push(...(<string[]>map[property]).map(x => <lmvc_model_event>{
+        queue.push(...(<string[]>map[property]).map(x => <lmvc_model_event_t>{
           property: x,
           model: proxy,
           prev: undefined,
@@ -146,7 +146,7 @@ export class $model {
   }
 
   static get_subject(model?: object) {
-    return model ? <lmvc_model_subject>(<any>model)[$mvc_model_subject] : undefined;
+    return model ? <lmvc_model_subject_t>(<any>model)[$mvc_model_subject] : undefined;
   }
 
   static get_underlying<_t_ = unknown>(model?: object) {
@@ -159,7 +159,7 @@ export class $model {
   }
 
   static make_model<_t_ = any>(value: _t_ = <any>{}): _t_ {
-    return $model.is_model(value) ? value : $model.create_model<_t_>(value, new Subject<lmvc_model_event[]>());
+    return $model.is_model(value) ? value : $model.create_model<_t_>(value, new Subject<lmvc_model_event_t[]>());
   }
 
   static get after_dispatch() {
