@@ -243,13 +243,25 @@ export class lmvc_app implements lmvc_app_t {
                   }
                 }
               }
-              const content = window.document.createNodeIterator(node[0], NodeFilter.SHOW_COMMENT, {
-                acceptNode: (child: Comment) => child.textContent?.indexOf('l:content') === -1 ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT
-              }).nextNode();
-              if(content) {
+              const content_txt = 'l:content';
+              const ni = window.document.createNodeIterator(node[0], NodeFilter.SHOW_COMMENT, {
+                acceptNode: (child: Comment) => child.textContent?.indexOf(content_txt) === -1 ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT
+              });
+              for(let content = ni.nextNode(); content; content = ni.nextNode()) {
                 const parent = content.parentNode!;
-                while(rt.node.firstChild) {
-                  parent.insertBefore(rt.node.firstChild, content);
+                let sel = content.textContent!;
+                sel = sel.slice(sel.indexOf(content_txt) + content_txt.length).trim();
+                if(sel) {
+                  const child: Element[] = [];
+                  rt.node.querySelectorAll(sel).forEach(x => child.push(x));
+                  while(child.length) {
+                    parent.insertBefore(child.shift()!, content);
+                  }
+                }
+                else {
+                  while(rt.node.firstChild) {
+                    parent.insertBefore(rt.node.firstChild, content);
+                  }
                 }
                 parent.removeChild(content);
               }
