@@ -22,16 +22,16 @@ export class $view {
 
 
   static async init_views(views: lmvc_view_t[]) {
-    const list = Array.from(views)
-    let wait = <Promise<any>[]>list
+    console.assert(views.some(x => x.$is_ready === true));
+    let wait = <Promise<any>[]>views
       .map(x => typeof x.$init === 'function' ? x.$init() : undefined)
       .filter(x => typeof x === 'object' && typeof x.then === 'function');
     await Promise.all(wait);
-    wait = <Promise<any>[]>list
+    wait = <Promise<any>[]>views
       .map(x => typeof x.$ready === 'function' ? x.$ready() : undefined)
       .filter(x => typeof x === 'object' && typeof x.then === 'function');
     await Promise.all(wait);
-    for(let x of list) {
+    for(let x of views) {
       x.$is_ready = true;
     }
   }

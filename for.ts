@@ -166,7 +166,7 @@ export class lmvc_for implements lmvc_view_t {
             }
           }
           else {
-            console.error('l:for missing "of" or "in" operator');
+            console.error(`l:for missing "of" or "in" operator ${this.$value}`);
           }
           return;
         }
@@ -188,12 +188,13 @@ export class lmvc_for implements lmvc_view_t {
   }
 
   $mount() {
-    this.$model_changed([]);
+    if(this.$scope!.node?.parentNode) {
+      this.$model_changed([]);
+    }
   }
 
   $ready() {
     const node = this.$scope!.node;
-    console.assert(node.parentNode !== null, 'unexpected (for) view element has no parent');
     if(node.parentNode) {
       node.parentNode.replaceChild(this.place_holder!, this.$scope!.node);
     }
