@@ -13,6 +13,8 @@ import type { lmvc_app_t as lmvc_app_t, lmvc_controller_t, lmvc_router_t, lmvc_s
 
 const view_attr_pattern = /\w[\w\-]*(:\w[\w\-]*){1,}/;
 
+const template_match: unique symbol = Symbol('l-mvc-template-match');
+
 export class lmvc_app implements lmvc_app_t {
   constructor() {
     const html = document.querySelector('html');
@@ -166,115 +168,128 @@ export class lmvc_app implements lmvc_app_t {
       is_root = true;
       views = new Set<lmvc_view_t>();
     }
+    let it = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, lmvc_app.node_iterator);
+    for(let next = <Element>it.nextNode(); next; next = <Element>it.nextNode()) {
+      const remove: string[] = [];
+      const scopes: lmvc_view_t[] = [];
+      const matchs: RegExpExecArray[] = (<any>next)[template_match];
+      (<any>next)[template_match] = undefined;
+      for(let match of matchs) {
+        console.debug([next, match])
+        this.create_view_instance(match.input.slice(0, match[0].length))
+        remove.push(match.input);
+      }
+      // for(let name of remove) {
+      //   next.removeAttribute(name);
+      // }
+    }
     if(rt.node instanceof Element) {
       const attr = rt.node.attributes;
-      if(attr) {
-        let remove: string[] = [];
-        let view: lmvc_view_t | undefined;
-        let ctlr: controller_t | undefined;
-        for(let i = 0, max = attr.length; i < max; ++i) {
-          const item = attr.item(i);
-          if(item) {
-            const match = view_attr_pattern.exec(item.name);
-            if(match && match.index === 0) {
-              remove.push(item.name);
-              view = await this.create_view_instance(match.input.slice(0, match[0].length));
-              rt.view.push(view);
-              views.add(view);
-              rt.controller.$view.push(view);
-              (<mutable_view>view).$scope = rt;
-              view.$arg = match.input.slice(match[0].length + 1);
-              view.$value = item.value;
-              if($controller.is_controller(view)) {
-                console.assert(ctlr === undefined, 'warning: multiple controllers detected on node ${scope.node.outerHTML}');
-                ctlr = <any>view;
-              }
+      let remove: string[] = [];
+      let view: lmvc_view_t | undefined;
+      let ctlr: controller_t | undefined;
+      for(let i = 0, max = attr.length; i < max; ++i) {
+        const item = attr.item(i);
+        if(item) {
+          const match = view_attr_pattern.exec(item.name);
+          if(match && match.index === 0) {
+            remove.push(item.name);
+            view = await this.create_view_instance(match.input.slice(0, match[0].length));
+            rt.view.push(view);
+            views.add(view);
+            rt.controller.$view.push(view);
+            (<mutable_view>view).$scope = rt;
+            view.$arg = match.input.slice(match[0].length + 1);
+            view.$value = item.value;
+            if($controller.is_controller(view)) {
+              console.assert(ctlr === undefined, 'warning: multiple controllers detected on node ${scope.node.outerHTML}');
+              ctlr = <any>view;
             }
           }
         }
-        for(let name of remove) {
-          if(attr.getNamedItem(name)) {
-            attr.removeNamedItem(name);
-          }
+      }
+      for(let name of remove) {
+        if(attr.getNamedItem(name)) {
+          attr.removeNamedItem(name);
         }
-        if(ctlr) {
-          (<mutable_controller>ctlr).$model = $model.make_model(ctlr.$model || {});
-          let node = await $controller.get_controller_html(ctlr);
-          if(node && Array.isArray(node) && node.length) {
-            if(node.length > 1) {
-              let lang =
-                document.body.lang?.toLowerCase() ||
-                document.body.parentElement?.querySelector('meta[http-equiv=content-language]')?.attributes.getNamedItem('content')?.value?.toLowerCase() ||
-                document.body.parentElement?.lang?.toLowerCase() ||
-                'en';
-              let html = node.filter(x => (<Element>x).attributes.getNamedItem('lang')?.value === lang);
+      }
+      if(ctlr) {
+        (<mutable_controller>ctlr).$model = $model.make_model(ctlr.$model || {});
+        let node = await $controller.get_controller_html(ctlr);
+        if(node && Array.isArray(node) && node.length) {
+          if(node.length > 1) {
+            let lang =
+              document.body.lang?.toLowerCase() ||
+              document.body.parentElement?.querySelector('meta[http-equiv=content-language]')?.attributes.getNamedItem('content')?.value?.toLowerCase() ||
+              document.body.parentElement?.lang?.toLowerCase() ||
+              'en';
+            let html = node.filter(x => (<Element>x).attributes.getNamedItem('lang')?.value === lang);
+            if(!html.length) {
+              lang = lang.split('-')[0];
+              html = node.filter(x => (<Element>x).attributes.getNamedItem('lang')?.value === lang);
               if(!html.length) {
-                lang = lang.split('-')[0];
-                html = node.filter(x => (<Element>x).attributes.getNamedItem('lang')?.value === lang);
+                html = node.filter(x => (<Element>x).attributes.getNamedItem('lang') === null);
                 if(!html.length) {
-                  html = node.filter(x => (<Element>x).attributes.getNamedItem('lang') === null);
-                  if(!html.length) {
-                    console.assert(false, 'unable to identify locale');
-                    html = [node[0]];
-                  }
+                  console.assert(false, 'unable to identify locale');
+                  html = [node[0]];
                 }
               }
-              console.assert(html.length === 1);
-              node = [html[0]];
             }
-            if(node[0] instanceof Element && rt.node instanceof Element) {
-              if(node[0].attributes && rt.node.attributes) {
-                for(let i = 0, max = rt.node.attributes.length; i < max; ++i) {
-                  const attr = rt.node.attributes.item(i);
-                  if(attr) {
-                    if(!node[0].hasAttribute(attr.name)) {
-                      rt.node.attributes.removeNamedItem(attr.name);
-                      node[0].attributes.setNamedItem(attr);
-                      --i;
+            console.assert(html.length === 1);
+            node = [html[0]];
+          }
+          if(node[0] instanceof Element && rt.node instanceof Element) {
+            if(node[0].attributes && rt.node.attributes) {
+              for(let i = 0, max = rt.node.attributes.length; i < max; ++i) {
+                const attr = rt.node.attributes.item(i);
+                if(attr) {
+                  if(!node[0].hasAttribute(attr.name)) {
+                    rt.node.attributes.removeNamedItem(attr.name);
+                    node[0].attributes.setNamedItem(attr);
+                    --i;
+                  }
+                  else {
+                    if(attr.name === 'style') {
+                      lmvc_app.join_attrib_value('style', node[0], rt.node, ';');
                     }
                     else {
-                      if(attr.name === 'style') {
-                        lmvc_app.join_attrib_value('style', node[0], rt.node, ';');
-                      }
-                      else {
-                        lmvc_app.join_attrib_value(attr.name, node[0], rt.node, ' ');
-                      }
+                      lmvc_app.join_attrib_value(attr.name, node[0], rt.node, ' ');
                     }
                   }
                 }
               }
-              const content_txt = 'l:content';
-              const ni = window.document.createNodeIterator(node[0], NodeFilter.SHOW_COMMENT, {
-                acceptNode: (child: Comment) => child.textContent?.indexOf(content_txt) === -1 ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT
-              });
-              for(let content = ni.nextNode(); content; content = ni.nextNode()) {
-                const parent = content.parentNode!;
-                let sel = content.textContent!;
-                sel = sel.slice(sel.indexOf(content_txt) + content_txt.length).trim();
-                if(sel) {
-                  const child: Element[] = [];
-                  rt.node.querySelectorAll(sel).forEach(x => child.push(x));
-                  while(child.length) {
-                    parent.insertBefore(child.shift()!, content);
-                  }
-                }
-                else {
-                  while(rt.node.firstChild) {
-                    parent.insertBefore(rt.node.firstChild, content);
-                  }
-                }
-                parent.removeChild(content);
-              }
-              rt.node.parentNode?.replaceChild(node[0], rt.node);
-              rt.node = node[0];
             }
+            const content_txt = 'l:content';
+            const ni = window.document.createNodeIterator(node[0], NodeFilter.SHOW_COMMENT, {
+              acceptNode: (child: Comment) => child.textContent?.indexOf(content_txt) === -1 ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT
+            });
+            for(let content = ni.nextNode(); content; content = ni.nextNode()) {
+              const parent = content.parentNode!;
+              let sel = content.textContent!;
+              sel = sel.slice(sel.indexOf(content_txt) + content_txt.length).trim();
+              if(sel) {
+                const child: Element[] = [];
+                rt.node.querySelectorAll(sel).forEach(x => child.push(x));
+                while(child.length) {
+                  parent.insertBefore(child.shift()!, content);
+                }
+              }
+              else {
+                while(rt.node.firstChild) {
+                  parent.insertBefore(rt.node.firstChild, content);
+                }
+              }
+              parent.removeChild(content);
+            }
+            rt.node.parentNode?.replaceChild(node[0], rt.node);
+            rt.node = node[0];
           }
-          await this.load_descendants(rt.node, ctlr, views);
-          lmvc_app.subscribe_to_model(ctlr);
         }
-        else {
-          await this.load_descendants(rt.node, rt.controller, views);
-        }
+        await this.load_descendants(rt.node, ctlr, views);
+        lmvc_app.subscribe_to_model(ctlr);
+      }
+      else {
+        await this.load_descendants(rt.node, rt.controller, views);
       }
     }
     if(is_root) {
@@ -331,6 +346,7 @@ export class lmvc_app implements lmvc_app_t {
 
   private static node_iterator = {
     acceptNode(node: Node) {
+      const list: RegExpExecArray[] = [];
       if(node instanceof Element) {
         const attr = node.attributes;
         if(attr !== undefined && attr.length) {
@@ -339,11 +355,15 @@ export class lmvc_app implements lmvc_app_t {
             if(item) {
               const match = view_attr_pattern.exec(item.name);
               if(match !== null && match.index === 0) {
-                return NodeFilter.FILTER_ACCEPT;
+                list.push(match);
               }
             }
           }
         }
+      }
+      if(list.length) {
+        (<any>node)[template_match] = list;
+        return NodeFilter.FILTER_ACCEPT;
       }
       return NodeFilter.FILTER_SKIP;
     }
