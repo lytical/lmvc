@@ -22,7 +22,7 @@ export class $view {
 
 
   static async init_views(views: lmvc_view_t[]) {
-    console.assert(views.some(x => x.$is_ready === true));
+    console.assert(views.every(x => !x.$is_ready));
     let wait = <Promise<any>[]>views
       .map(x => typeof x.$init === 'function' ? x.$init() : undefined)
       .filter(x => typeof x === 'object' && typeof x.then === 'function');
