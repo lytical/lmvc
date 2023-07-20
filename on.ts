@@ -8,10 +8,10 @@ import { view } from './view';
 import { tokenize } from 'esprima';
 import type { lmvc_scope_t, lmvc_view_t } from './type';
 
+
 @view()
 export class lmvc_on implements lmvc_view_t {
   async $init() {
-    console.debug({instance: this.instance, arg: this.$arg, value: this.$value})
     let arg = typeof this.$arg === 'string' ? decodeURI(this.$arg) : undefined;
     if(arg) {
       if(this.$value) {
@@ -86,7 +86,4 @@ export class lmvc_on implements lmvc_view_t {
   private member?: Function;
   private model: any;
   private prop?: string[];
-  private instance = ++id;
 }
-
-let id = 0;
