@@ -40,6 +40,10 @@ export class lmvc_app implements lmvc_app_t {
     return ctlr;
   }
 
+  private async create_views() {
+
+  }
+
   async create_view_instance(id: string): Promise<lmvc_view_t> {
     let cstor = this.view[id];
     if(!cstor) {
@@ -168,7 +172,9 @@ export class lmvc_app implements lmvc_app_t {
       is_root = true;
       views = new Set<lmvc_view_t>();
     }
+    const views = 
     let it = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, lmvc_app.node_iterator);
+    let wait: Promise<any>[] = [];
     for(let next = <Element>it.nextNode(); next; next = <Element>it.nextNode()) {
       const remove: string[] = [];
       const scopes: lmvc_view_t[] = [];
@@ -176,7 +182,8 @@ export class lmvc_app implements lmvc_app_t {
       (<any>next)[template_match] = undefined;
       for(let match of matchs) {
         console.debug([next, match])
-        this.create_view_instance(match.input.slice(0, match[0].length))
+        var v = this.create_view_instance(match[0]));
+        wait.push(v);
         remove.push(match.input);
       }
       // for(let name of remove) {
