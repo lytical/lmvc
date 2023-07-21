@@ -11,9 +11,9 @@ import type { Unsubscribable } from 'rxjs';
 import type { __cstor_t } from 'common/plain-object';
 import type { lmvc_app_t as lmvc_app_t, lmvc_controller_t, lmvc_router_t, lmvc_scope_t, lmvc_view_t } from './type';
 
-const view_attr_pattern = /\w[\w\-]*(:\w[\w\-]*){1,}/;
-
+const content_txt = 'l:content';
 const template_match: unique symbol = Symbol('l-mvc-template-match');
+const view_attr_pattern = /\w[\w\-]*(:\w[\w\-]*){1,}/;
 
 export class lmvc_app implements lmvc_app_t {
   constructor() {
@@ -40,8 +40,31 @@ export class lmvc_app implements lmvc_app_t {
     return ctlr;
   }
 
-  private async create_views() {
-
+  private async create_views(node: Node) {
+    const rt: scope_ctx[] = [];
+    let it = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, lmvc_app.node_iterator);
+    let wait: Promise<any>[] = [];
+    for(let next = <Element>it.nextNode(); next; next = <Element>it.nextNode()) {
+      const matchs: RegExpExecArray[] = (<any>next)[template_match];
+      (<any>next)[template_match] = undefined;
+      const item: scope_ctx = {
+        node: next,
+        view: []
+      };
+      rt.push(item);
+      for(let match of matchs) {
+        const create = async () => {
+          item.view.push({
+            arg: match.input.slice(match[0].length + 1),
+            attr: match.input,
+            instance: await this.create_view_instance(match[0])
+          });
+        };
+        wait.push(create());
+      }
+    }
+    await Promise.all(wait);
+    return rt;
   }
 
   async create_view_instance(id: string): Promise<lmvc_view_t> {
@@ -144,27 +167,12 @@ export class lmvc_app implements lmvc_app_t {
         .join(seperator));
   }
 
-  load_descendants(node: Node, controller: lmvc_controller_t, views?: Set<lmvc_view_t>) {
-    let wait: Promise<lmvc_scope_t>[] = [];
-    let it = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, lmvc_app.node_iterator);
-    for(let next = <Element>it.nextNode(); next; next = <Element>it.nextNode()) {
-      wait.push(this.load_scope(next, controller, views));
-    }
-    return Promise.all(wait);
-  }
-
   async load_scope(node: Node, controller: lmvc_controller_t, views?: Set<lmvc_view_t>): Promise<lmvc_scope_t> {
-    const rt: lmvc_scope_t = {
-      app: this,
-      controller,
-      node,
-      template: node.cloneNode(true),
-      view: []
-    };
-    if(rt.controller) {
-      (<mutable_controller>rt.controller).$model = $model.make_model(rt.controller.$model || {});
-      if(!rt.controller.$view) {
-        (<mutable_controller>rt.controller).$view = [];
+    const template = node.cloneNode(true);
+    if(controller) {
+      (<mutable_controller>controller).$model = $model.make_model(controller.$model || {});
+      if(!controller.$view) {
+        (<mutable_controller>controller).$view = [];
       }
     }
     let is_root: true | undefined;
@@ -172,142 +180,118 @@ export class lmvc_app implements lmvc_app_t {
       is_root = true;
       views = new Set<lmvc_view_t>();
     }
-    const views = 
-    let it = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, lmvc_app.node_iterator);
-    let wait: Promise<any>[] = [];
-    for(let next = <Element>it.nextNode(); next; next = <Element>it.nextNode()) {
-      const remove: string[] = [];
-      const scopes: lmvc_view_t[] = [];
-      const matchs: RegExpExecArray[] = (<any>next)[template_match];
-      (<any>next)[template_match] = undefined;
-      for(let match of matchs) {
-        console.debug([next, match])
-        var v = this.create_view_instance(match[0]));
-        wait.push(v);
-        remove.push(match.input);
-      }
-      // for(let name of remove) {
-      //   next.removeAttribute(name);
-      // }
-    }
-    if(rt.node instanceof Element) {
-      const attr = rt.node.attributes;
-      let remove: string[] = [];
-      let view: lmvc_view_t | undefined;
-      let ctlr: controller_t | undefined;
-      for(let i = 0, max = attr.length; i < max; ++i) {
-        const item = attr.item(i);
-        if(item) {
-          const match = view_attr_pattern.exec(item.name);
-          if(match && match.index === 0) {
-            remove.push(item.name);
-            view = await this.create_view_instance(match.input.slice(0, match[0].length));
-            rt.view.push(view);
-            views.add(view);
-            rt.controller.$view.push(view);
-            (<mutable_view>view).$scope = rt;
-            view.$arg = match.input.slice(match[0].length + 1);
-            view.$value = item.value;
-            if($controller.is_controller(view)) {
-              console.assert(ctlr === undefined, 'warning: multiple controllers detected on node ${scope.node.outerHTML}');
-              ctlr = <any>view;
-            }
-          }
+    const ctlrs: lmvc_controller_t[] = [];
+    const scope = (await this.create_views(node)).map(x => {
+      const rt = <lmvc_scope_t>{
+        app: this,
+        controller,
+        node: x.node,
+        template: x.node.cloneNode(true),
+        view: x.view.map(y => {
+          y.instance.$arg = y.arg || undefined;
+          y.instance.$value = (<Element>x.node).getAttribute(y.attr) || undefined;
+          (<Element>x.node).removeAttribute(y.attr);
+          views!.add(y.instance);
+          controller.$view.push(y.instance);
+          return y.instance;
+        })
+      };
+      for(let x of rt.view) {
+        if($controller.is_controller(x)) {
+          ctlrs.push(<lmvc_controller_t>x);
         }
+        (<mutable_view>x).$scope = rt;
       }
-      for(let name of remove) {
-        if(attr.getNamedItem(name)) {
-          attr.removeNamedItem(name);
-        }
-      }
-      if(ctlr) {
-        (<mutable_controller>ctlr).$model = $model.make_model(ctlr.$model || {});
-        let node = await $controller.get_controller_html(ctlr);
-        if(node && Array.isArray(node) && node.length) {
-          if(node.length > 1) {
-            let lang =
-              document.body.lang?.toLowerCase() ||
-              document.body.parentElement?.querySelector('meta[http-equiv=content-language]')?.attributes.getNamedItem('content')?.value?.toLowerCase() ||
-              document.body.parentElement?.lang?.toLowerCase() ||
-              'en';
-            let html = node.filter(x => (<Element>x).attributes.getNamedItem('lang')?.value === lang);
+      return rt;
+    });
+    const rt: lmvc_scope_t = node === scope[0]?.node ? scope[0] : {
+      app: this,
+      controller,
+      node,
+      template,
+      view: []
+    };
+    for(let ctlr of ctlrs) {
+      (<mutable_controller>ctlr).$model = $model.make_model(ctlr.$model || {});
+      let html_node = await $controller.get_controller_html(ctlr);
+      if(html_node && Array.isArray(html_node) && html_node.length) {
+        if(html_node.length > 1) {
+          let lang =
+            document.body.lang?.toLowerCase() ||
+            document.body.parentElement?.querySelector('meta[http-equiv=content-language]')?.attributes.getNamedItem('content')?.value?.toLowerCase() ||
+            document.body.parentElement?.lang?.toLowerCase() ||
+            'en';
+          let html = html_node.filter(x => (<Element>x).attributes.getNamedItem('lang')?.value === lang);
+          if(!html.length) {
+            lang = lang.split('-')[0];
+            html = html_node.filter(x => (<Element>x).attributes.getNamedItem('lang')?.value === lang);
             if(!html.length) {
-              lang = lang.split('-')[0];
-              html = node.filter(x => (<Element>x).attributes.getNamedItem('lang')?.value === lang);
+              html = html_node.filter(x => (<Element>x).attributes.getNamedItem('lang') === null);
               if(!html.length) {
-                html = node.filter(x => (<Element>x).attributes.getNamedItem('lang') === null);
-                if(!html.length) {
-                  console.assert(false, 'unable to identify locale');
-                  html = [node[0]];
-                }
+                console.assert(false, 'unable to identify locale');
+                html = [html_node[0]];
               }
             }
-            console.assert(html.length === 1);
-            node = [html[0]];
           }
-          if(node[0] instanceof Element && rt.node instanceof Element) {
-            if(node[0].attributes && rt.node.attributes) {
-              for(let i = 0, max = rt.node.attributes.length; i < max; ++i) {
-                const attr = rt.node.attributes.item(i);
-                if(attr) {
-                  if(!node[0].hasAttribute(attr.name)) {
-                    rt.node.attributes.removeNamedItem(attr.name);
-                    node[0].attributes.setNamedItem(attr);
-                    --i;
+          console.assert(html.length === 1);
+          html_node = [html[0]];
+        }
+        const ctlr_node = ctlr.$scope!.node;
+        if(html_node[0] instanceof Element && ctlr_node instanceof Element) {
+          if(html_node[0].attributes && ctlr_node.attributes) {
+            for(let i = 0, max = ctlr_node.attributes.length; i < max; ++i) {
+              const attr = ctlr_node.attributes.item(i);
+              if(attr) {
+                if(!html_node[0].hasAttribute(attr.name)) {
+                  ctlr_node.attributes.removeNamedItem(attr.name);
+                  html_node[0].attributes.setNamedItem(attr);
+                  --i;
+                }
+                else {
+                  if(attr.name === 'style') {
+                    lmvc_app.join_attrib_value('style', html_node[0], ctlr_node, ';');
                   }
                   else {
-                    if(attr.name === 'style') {
-                      lmvc_app.join_attrib_value('style', node[0], rt.node, ';');
-                    }
-                    else {
-                      lmvc_app.join_attrib_value(attr.name, node[0], rt.node, ' ');
-                    }
+                    lmvc_app.join_attrib_value(attr.name, html_node[0], ctlr_node, ' ');
                   }
                 }
               }
             }
-            const content_txt = 'l:content';
-            const ni = window.document.createNodeIterator(node[0], NodeFilter.SHOW_COMMENT, {
-              acceptNode: (child: Comment) => child.textContent?.indexOf(content_txt) === -1 ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT
-            });
-            for(let content = ni.nextNode(); content; content = ni.nextNode()) {
-              const parent = content.parentNode!;
-              let sel = content.textContent!;
-              sel = sel.slice(sel.indexOf(content_txt) + content_txt.length).trim();
-              if(sel) {
-                const child: Element[] = [];
-                rt.node.querySelectorAll(sel).forEach(x => child.push(x));
-                while(child.length) {
-                  parent.insertBefore(child.shift()!, content);
-                }
-              }
-              else {
-                while(rt.node.firstChild) {
-                  parent.insertBefore(rt.node.firstChild, content);
-                }
-              }
-              parent.removeChild(content);
-            }
-            rt.node.parentNode?.replaceChild(node[0], rt.node);
-            rt.node = node[0];
           }
+          const ni = window.document.createNodeIterator(html_node[0], NodeFilter.SHOW_COMMENT, {
+            acceptNode: (child: Comment) => child.textContent?.indexOf(content_txt) === -1 ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT
+          });
+          for(let content = ni.nextNode(); content; content = ni.nextNode()) {
+            const parent = content.parentNode!;
+            let sel = content.textContent!;
+            sel = sel.slice(sel.indexOf(content_txt) + content_txt.length).trim();
+            if(sel) {
+              const child: Element[] = [];
+              (<Element>ctlr.$scope!.node).querySelectorAll(sel).forEach(x => child.push(x));
+              while(child.length) {
+                parent.insertBefore(child.shift()!, content);
+              }
+            }
+            else {
+              while(ctlr_node.firstChild) {
+                parent.insertBefore(ctlr_node.firstChild!, content);
+              }
+            }
+            parent.removeChild(content);
+          }
+          ctlr_node.parentNode?.replaceChild(html_node[0], ctlr_node);
+          ctlr.$scope!.node = html_node[0];
         }
-        await this.load_descendants(rt.node, ctlr, views);
-        lmvc_app.subscribe_to_model(ctlr);
       }
-      else {
-        await this.load_descendants(rt.node, rt.controller, views);
-      }
+      await this.load_scope(ctlr.$scope!.node, ctlr, views);
+      lmvc_app.subscribe_to_model(ctlr);
+      console.debug({ ctlr })
     }
     if(is_root) {
-      for(let x of rt.view) {
-        views.add(x);
-      }
       await $view.init_views(Array.from(views));
     }
-    if(rt.view.length) {
-      this.scope.push(rt);
-    }
+    this.scope.push(...scope);
+    console.debug({scope:this.scope})
     return rt;
   }
 
@@ -382,6 +366,15 @@ export class lmvc_app implements lmvc_app_t {
   private scope: lmvc_scope_t[] = [];
   private task = Promise.resolve();
   private readonly view: Record<string, Promise<__cstor_t<lmvc_view_t>>> = {};
+}
+
+interface scope_ctx {
+  node: Node;
+  view: {
+    arg: string;
+    attr: string;
+    instance: lmvc_view_t
+  }[];
 }
 
 type controller_t = lmvc_controller_t & { $sub?: Unsubscribable };

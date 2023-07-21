@@ -39,13 +39,6 @@ export interface lmvc_app_t {
    * @param controller 
    * @param views 
    */
-  load_descendants(node: Node, controller: lmvc_controller_t, views?: Set<lmvc_view_t>): Promise<lmvc_scope_t[]>;
-  /**
-   * 
-   * @param node 
-   * @param controller 
-   * @param views 
-   */
   load_scope(node: Node, controller: lmvc_controller_t, views?: Set<lmvc_view_t>): Promise<lmvc_scope_t>;
   /**
    * 
@@ -64,7 +57,6 @@ export interface lmvc_scope_t<_t_ = lmvc_model_t> {
   args?: string | string[];
   readonly controller: lmvc_controller_t<_t_>;
   node: Node;
-  parent?: lmvc_scope_t;
   template: Node;
   view: lmvc_view_t<_t_>[];
 }

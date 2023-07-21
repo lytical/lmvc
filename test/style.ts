@@ -30,7 +30,7 @@ describe('l:style view', () => {
         model.style = 'line-through underline';
         await $model.after_dispatch;
         expect(y.style.textDecoration, 'style should be "line-through" and "underline"').contains('underline').contains('line-through');
-        y.parentNode?.removeChild(y);
+        //y.parentNode?.removeChild(y);
       }
     }
   });

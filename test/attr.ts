@@ -43,7 +43,7 @@ describe('l:attr view', () => {
         val = y.getAttribute('foobar');
         expect(val, 'attribute not added').equals('disable');
         expect(y.hasAttribute('disabled'), 'expected "disabled" attribute').is.true;
-        y.parentNode?.removeChild(y);
+        //y.parentNode?.removeChild(y);
       }
     }
   });

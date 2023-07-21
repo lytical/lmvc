@@ -30,7 +30,7 @@ describe('l:on view', () => {
         y.dispatchEvent(new Event('test-it'));
         expect(evt, 'event handler not invoked.').is.not.undefined;
         expect(val, 'event handler not invoked.').equals(123);
-        y.parentNode?.removeChild(y);
+        //y.parentNode?.removeChild(y);
       }
     }
   });

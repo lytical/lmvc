@@ -29,7 +29,7 @@ describe('l:prop view', () => {
         model.text = 'prop-value11';
         await $model.after_dispatch;
         expect(y.textContent).equals('prop-value11');
-        y.parentNode?.removeChild(y);
+        //y.parentNode?.removeChild(y);
       }
     }
   });

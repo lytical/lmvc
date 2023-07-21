@@ -26,7 +26,7 @@ describe('l:html view', () => {
         model.text = '<b>html value</b>';
         await $model.after_dispatch;
         expect(y.innerHTML).equals('<b>html value</b>');
-        y.parentNode?.removeChild(y);
+        //y.parentNode?.removeChild(y);
       }
     }
   });

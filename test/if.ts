@@ -32,7 +32,7 @@ describe('l:if view', () => {
         model.text = 'show';
         await $model.after_dispatch;
         expect(y.closest('body')).is.not.null;
-        y.parentNode?.removeChild(y);
+        //y.parentNode?.removeChild(y);
       }
     }
   });

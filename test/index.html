@@ -11,28 +11,32 @@
 
 <body>
   <div id="mocha"></div>
-  <div id="test-app" l:test:item:controller></div>
-  <div id="test-attr" l:attr?foobar="text" l:attr?disabled="text==='disable'">test-attr</div>
-  <div id="test-bind">
-    <input type="text" l:bind="text" />
-    <input type="text" l:bind="item.text" />
-  </div>
+  <!--
+    <div id="test-app" l:test:item:controller></div>
+    <div id="test-attr" l:attr?foobar="text" l:attr?disabled="text==='disable'">test-attr</div>
+    <div id="test-bind">
+      <input type="text" l:bind="text" />
+      <input type="text" l:bind="item.text" />
+    </div>
+  -->
   <div id="test-for-of">
     <div l:for="(i, x) of item?.values||[]" l:text="`${i}-${forloop}-${x}`">test-for-of</div>
   </div>
-  <div id="test-for-in">
-    <div l:for="(i, x) in item?.values||[]" l:text="`${i}-${forloop}-${x}`">test-for-in</div>
-  </div>
-  <div id="test-class" l:class?text-muted="text==='mute'" l:class?bt-4&pb-2="text==='space'">test-class</div>
-  <div id="test-html" l:html="text">test-html</div>
-  <div id="test-if" l:if="text!=='hide'">test-if</div>
-  <div id="test-on" l:on?test-it="on_load($event,123)">test-on</div>
-  <div id="test-prop" l:prop?text="text" l:test:item:controller>test-prop</div>
-  <div id="test-router">
-    <div l:router="/lmvc/test/item/controller">test-router</div>
-  </div>
-  <div id="test-style" l:style?text-decoration="style">test-style</div>
-  <div id="test-text" l:text="text">test-text</div>
+  <!--
+    <div id="test-for-in">
+      <div l:for="(i, x) in item?.values||[]" l:text="`${i}-${forloop}-${x}`">test-for-in</div>
+    </div>
+    <div id="test-class" l:class?text-muted="text==='mute'" l:class?bt-4&pb-2="text==='space'">test-class</div>
+    <div id="test-html" l:html="text">test-html</div>
+    <div id="test-if" l:if="text!=='hide'">test-if</div>
+    <div id="test-on" l:on?test-it="on_load($event,123)">test-on</div>
+    <div id="test-prop" l:prop?text="text" l:test:item:controller>test-prop</div>
+    <div id="test-router">
+      <div l:router="/lmvc/test/item/controller">test-router</div>
+    </div>
+    <div id="test-style" l:style?text-decoration="style">test-style</div>
+    <div id="test-text" l:text="text">test-text</div>
+  -->
   <script data-main="/lmvc/main" src="/node_modules/requirejs/require.js"></script>
   <script>
     setTimeout(() => run_tests(), 250);

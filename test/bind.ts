@@ -45,7 +45,7 @@ describe('l:bind view', () => {
           await $model.after_dispatch;
           expect(model.item.text).equals('bind4');
         }
-        y.parentNode?.removeChild(y);
+        //y.parentNode?.removeChild(y);
       }
     }
   });

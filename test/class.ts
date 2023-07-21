@@ -39,7 +39,7 @@ describe('l:class view', () => {
         model.text = 'foobar';
         await $model.after_dispatch;
         expect(y.classList).is.empty;
-        y.parentNode?.removeChild(y);
+        //y.parentNode?.removeChild(y);
       }
     }
   });
