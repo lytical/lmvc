@@ -106,6 +106,9 @@ export class lmvc_app implements lmvc_app_t {
         }
       }
       await Promise.all(task);
+      while(ls.length) {
+        this.scope.splice(this.scope.indexOf(ls.pop()!), 1);
+      }
     }
   }
 
@@ -285,13 +288,11 @@ export class lmvc_app implements lmvc_app_t {
       }
       await this.load_scope(ctlr.$scope!.node, ctlr, views);
       lmvc_app.subscribe_to_model(ctlr);
-      console.debug({ ctlr })
     }
     if(is_root) {
       await $view.init_views(Array.from(views));
     }
     this.scope.push(...scope);
-    console.debug({scope:this.scope})
     return rt;
   }
 
