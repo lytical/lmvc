@@ -59,7 +59,7 @@ export class lmvc_on implements lmvc_view_t {
   invoke(evt: Event) {
     if(this.member) {
       this.func!.apply(undefined, [evt, this.member.bind(this.model)].concat(...this.prop!.map(x => {
-        const rt = this.model[x];
+        const rt = (this.model.$model || this.model)[x];
         return typeof rt === 'function' ? rt.bind(this.model) : rt;
       })));
     }

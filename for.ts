@@ -51,10 +51,10 @@ export class lmvc_for implements lmvc_view_t {
               get $model() {
                 return model;
               },
-
               set $model(_: any) { },
               $view: []
             };
+            Object.setPrototypeOf(controller, this.$scope!.controller);
             const views = new Set<lmvc_view_t>();
             leaf = await this.$scope!.app.load_scope(this.template!.cloneNode(true), controller, views);
             if(leaf) {
@@ -89,6 +89,10 @@ export class lmvc_for implements lmvc_view_t {
   }
 
   $dispose() {
+    for(let leaf of this.leaf) {
+      this.$scope?.app.destroy_scope(leaf);
+    }
+    this.leaf = [];
     if(this.place_holder.parentElement) {
       this.place_holder.parentElement.removeChild(this.place_holder);
     }
