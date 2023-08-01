@@ -89,8 +89,8 @@ export class lmvc_app implements lmvc_app_t {
 
   async destroy_scope(scope: lmvc_scope_t) {
     const ls = this.get_scope_self_and_descendant(scope);
+    scope.node.parentNode?.removeChild(scope.node);
     if(ls.length) {
-      ls[0].node.parentNode?.removeChild(ls[0].node);
       const task: Promise<void>[] = [];
       for(let i = ls.length - 1; i !== -1; --i) {
         for(let v of ls[i].view) {
