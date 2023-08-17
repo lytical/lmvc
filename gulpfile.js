@@ -7,4 +7,6 @@
 const _gulp = require('gulp');
 const _lib = require('../common/gulpfile');
 
-exports.post_build = _gulp.parallel(() => _lib.copy_files('../.obj/lmvc/**', '../.dist/.static/lmvc'), () => _lib.copy_static_assets('lmvc'));
+exports.post_build = _gulp.parallel(
+  () => _lib.pump(_gulp.src('../.obj/lmvc/**'), _gulp.dest('../.dist/.static/lmvc')),
+  () => _lib.copy_static_assets('lmvc'));
