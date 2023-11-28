@@ -7,7 +7,7 @@ please refer to your license agreement on the use of this file.
 import { lmvc_eval } from './eval';
 import { view } from './view';
 import { $controller } from './controller';
-import obj_util from 'common/obj-util';
+import obj_util from './obj-util';
 import type { lmvc_model_t, lmvc_controller_t } from './type';
 
 @view()

@@ -4,7 +4,7 @@
   please refer to your license agreement on the use of this file.
 */
 
-import type { __cstor_t } from 'common/plain-object';
+import type { __cstor_t } from './plain-object';
 import type { lmvc_view_t, lmvc_view_metadata_arg_t } from './type';
 
 const mvc_view_metadata: unique symbol = Symbol('l-mvc-view-metadata');

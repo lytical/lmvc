@@ -4,7 +4,7 @@
   please refer to your license agreement on the use of this file.
 */
 
-import { future } from '../common/future';
+import { future } from './future';
 import { parseScript } from 'esprima';
 import { Subject } from 'rxjs';
 import type { lmvc_model_event_t, lmvc_model_subject_t } from './type';

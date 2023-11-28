@@ -5,8 +5,11 @@
 */
 
 const _gulp = require('gulp');
-const _lib = require('../common/gulpfile');
+const _pump = require('pump');
+const _uglify = require('gulp-uglify-es').default;
 
-exports.post_build = _gulp.parallel(
-  () => _lib.pump(_gulp.src('../.obj/lmvc/**'), _gulp.dest('../.dist/.static/lmvc')),
-  () => _lib.copy_static_assets('lmvc'));
+exports.post_build = _gulp.parallel
+  (
+    done => _pump(_gulp.src(['package.json', 'README.md']), _gulp.dest('../.dist'), done),
+    done => _pump(_gulp.src('../.dist/**/*.js', { dot: true }), _uglify({ mangle: { keep_fnames: true }, output: { comments: 'some' } }), _gulp.dest('../.dist'), done)
+  );

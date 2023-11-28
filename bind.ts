@@ -5,7 +5,7 @@
 */
 
 import { view } from './view';
-import obj_util from '../common/obj-util';
+import obj_util from './obj-util';
 import type { lmvc_model_event_t, lmvc_scope_t, lmvc_view_t } from './type';
 
 @view()

@@ -7,7 +7,7 @@ please refer to your license agreement on the use of this file.
 import { expect } from 'chai';
 import { fixture } from './global';
 import test_app from '../app';
-import { $model } from 'lmvc/model';
+import { $model } from '../model';
 
 let model: any;
 

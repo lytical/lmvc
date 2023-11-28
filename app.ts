@@ -8,7 +8,7 @@ import { $view } from './view';
 import { $controller } from './controller';
 import { $model } from './model';
 import type { Unsubscribable } from 'rxjs';
-import type { __cstor_t } from 'common/plain-object';
+import type { __cstor_t } from './plain-object';
 import type { lmvc_app_t as lmvc_app_t, lmvc_controller_t, lmvc_router_t, lmvc_scope_t, lmvc_view_t } from './type';
 
 const content_txt = 'l:content';

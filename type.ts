@@ -4,7 +4,7 @@
   please refer to your license agreement on the use of this file.
 */
 
-import type { __cstor_t } from 'common/plain-object';
+import type { __cstor_t } from './plain-object';
 import type { Subscribable } from 'rxjs';
 
 export interface lmvc_app_t {
