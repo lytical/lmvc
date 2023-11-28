@@ -6,7 +6,7 @@
 
 import { expect } from 'chai';
 import lmvc_app from '../app';
-import type { lmvc_controller_t } from 'lmvc/type';
+import type { lmvc_controller_t } from '../type';
 
 after(() => {
 });
