@@ -23,6 +23,15 @@
     "pump": "^3.0.0",
     "typescript": "^5.3.2"
   },
+  "keywords": [
+    "hayles",
+    "lyt",
+    "lyt.service",
+    "lytical",
+    "node",
+    "nodejs",
+    "mvc"
+  ],
   "main": "index.js",
   "name": "@lytical/lmvc",
   "private": false,
@@ -32,7 +41,8 @@
   },
   "scripts": {
     "build": "tsc --build&&gulp post_build",
-    "clean": "tsc --build --clean"
+    "clean": "tsc --build --clean",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "0.0.0"
+  "version": "0.0.1"
 }
