@@ -1,4 +1,5 @@
-{"$schema": "https://json.schemastore.org/tsconfig",
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compileOnSave": true,
   "compilerOptions": {
     "allowJs": false,
@@ -26,7 +27,7 @@
     "noUnusedParameters": true,
     "outFile": "../.dist/index.js",
     "removeComments": true,
-    "rootDir": "..",
+    "rootDir": ".",
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
